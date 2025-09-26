@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.grzegorzkartasiewicz</groupId>
+        <artifactId>Facebook-Clone</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>monolith</artifactId>
+    <name>monolith</name>
+    <description>Monolith module to package the application</description>
+
+    <dependencies>
+        <!-- Główna zależność do modułu adapters, który dostarcza całą funkcjonalność -->
+        <dependency>
+            <groupId>com.grzegorzkartasiewicz</groupId>
+            <artifactId>adapters</artifactId>
+        </dependency>
+
+        <!-- Spring Boot Starter - potrzebny do uruchomienia aplikacji -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+
+        <!-- Zależność testowa -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Plugin do budowania wykonywalnego pliku JAR -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

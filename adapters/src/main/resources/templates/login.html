@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Facebook-Clone</title>
+    <link rel="stylesheet" href="https://igoradamenko.github.io/awsm.css/css/awsm.min.css">
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+<h1>Facebook-Clone</h1>
+<h1 th:if="${message != null}" th:text="${message}"></h1>
+<fieldset>
+    <legend>Log in</legend>
+    <form action="#" method="post" th:action="@{/login}">
+        <label>
+            login:
+            <input type="text" name="username" />
+        </label>
+        <label>
+            password:
+            <input type="password" name="password" />
+        </label>
+        <div>
+            <button type="submit">Log in</button>
+        </div>
+    </form>
+</fieldset>
+<fieldset>
+    <legend>Sign up</legend>
+    <form action="#" method="post" th:action="@{/register}" th:object="${login}">
+        <p class="C(red)" th:if="${#fields.hasAnyErrors()}" th:errors="*{all}"></p>
+        <label>
+            login:
+            <input type="text" th:field="*{nick}" />
+        </label>
+        <label>
+            password:
+            <input type="password" th:field="*{password}" />
+        </label>
+        <label>
+            email:
+            <input type="text" th:field="*{email}" />
+        </label>
+        <label>
+            name:
+            <input type="text" th:field="*{user.name}" />
+        </label>
+        <label>
+            surname:
+            <input type="text" th:field="*{user.surname}" />
+        </label>
+        <label>
+            age:
+            <input type="number" th:field="*{user.age}" />
+        </label>
+        <div>
+            <button type="submit">Sign up</button>
+        </div>
+    </form>
+</fieldset>
+</body>
+</html>

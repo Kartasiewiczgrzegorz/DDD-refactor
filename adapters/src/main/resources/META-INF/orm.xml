@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm
+   http://java.sun.com/xml/ns/persistence/orm_1_0.xsd"
+                 version="1.0">
+
+    <description>XML Mapping file</description>
+
+    <entity class="com.grzegorzkartasiewicz.comment.CommentSnapshot" access="FIELD">
+        <table name="comments"/>
+        <attributes>
+            <id name="id">
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="description">
+                <column name="description"/>
+            </basic>
+            <embedded name="postId">
+                <attribute-override name="id">
+                    <column name="post_id"/>
+                </attribute-override>
+            </embedded>
+            <embedded name="userId">
+                <attribute-override name="id">
+                    <column name="user_id"/>
+                </attribute-override>
+            </embedded>
+        </attributes>
+    </entity>
+
+    <entity class="com.grzegorzkartasiewicz.login.LoginSnapshot" access="FIELD">
+        <table name="logins"/>
+        <attributes>
+            <id name="id">
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="nick">
+                <column name="nick"/>
+            </basic>
+            <basic name="password">
+                <column name="password"/>
+            </basic>
+            <basic name="email">
+                <column name="email"/>
+            </basic>
+            <embedded name="userId">
+                <attribute-override name="id">
+                    <column name="user_id"/>
+                </attribute-override>
+            </embedded>
+        </attributes>
+    </entity>
+
+    <entity class="com.grzegorzkartasiewicz.post.PostSnapshot" access="FIELD">
+        <table name="posts"/>
+        <attributes>
+            <id name="id">
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="description">
+                <column name="description"/>
+            </basic>
+            <embedded name="userId">
+                <attribute-override name="id">
+                    <column name="user_id"/>
+                </attribute-override>
+            </embedded>
+        </attributes>
+    </entity>
+
+    <entity class="com.grzegorzkartasiewicz.user.UserSnapshot" access="FIELD">
+        <table name="users"/>
+        <attributes>
+            <id name="id">
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="name">
+                <column name="name"/>
+            </basic>
+            <basic name="surname">
+                <column name="surname"/>
+            </basic>
+            <basic name="age">
+                <column name="age"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <embeddable class="com.grzegorzkartasiewicz.comment.vo.CommentId" access="FIELD">
+        <attributes>
+            <basic name="id">
+                <column nullable="false"/>
+            </basic>
+        </attributes>
+    </embeddable>
+    <embeddable class="com.grzegorzkartasiewicz.post.vo.PostId" access="FIELD">
+        <attributes>
+            <basic name="id">
+                <column nullable="false"/>
+            </basic>
+        </attributes>
+    </embeddable>
+    <embeddable class="com.grzegorzkartasiewicz.user.vo.UserId" access="FIELD">
+        <attributes>
+            <basic name="id">
+                <column nullable="false"/>
+            </basic>
+        </attributes>
+    </embeddable>
+    <embeddable class="com.grzegorzkartasiewicz.login.vo.LoginId" access="FIELD">
+        <attributes>
+            <basic name="id">
+                <column nullable="false"/>
+            </basic>
+        </attributes>
+    </embeddable>
+</entity-mappings>

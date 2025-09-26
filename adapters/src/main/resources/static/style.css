@@ -1,0 +1,55 @@
+        .Bd {
+            border: solid 1px black;
+        }
+        button {
+            background-color: steelblue;
+        }
+        body>header {
+            background-color: steelblue;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            max-width: none;
+        }
+        .header {
+            display: flex;
+            width: 100%;
+            padding: 10px;
+            align-items:center;
+        }
+        form label, form select, output {
+        display: flex;
+        }
+        .search{
+            width: 60%;
+            margin:0;
+        }
+        .display{
+            display:flex;
+            justify-content:end;
+            margin-right:0;
+        }
+        .search-input{
+            margin:0;
+        }
+        form input[type], form select, form textarea {
+            margin-bottom: 0;
+        }
+        div{
+            display:flex;
+        }
+        ul>li{
+            border-style: solid;
+            border-width: thin;
+        }
+        .post-description{
+            border-style: solid;
+            border-width: thin;
+        }
+
+        ul{
+            list-style: none;
+        }
+        form{
+            padding: 10px;
+        }

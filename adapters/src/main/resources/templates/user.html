@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facebook-Clone</title>
+    <link rel="stylesheet" href="https://igoradamenko.github.io/awsm.css/css/awsm.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+<header>
+    <h1 class="header">
+        <form action="#" class="home" method="get" th:action="@{/posts/home}">
+            <label>
+                <button type="submit">Facebook-Clone</button>
+            </label>
+        </form>
+        <form action="#" class="home" method="get" th:action="@{/user/home}">
+            <label>
+                <button type="submit">My profile</button>
+            </label>
+        </form>
+        <form action="#" class="search" method="get" th:action="@{/posts/search}">
+            <label>
+                <input name="search" class="search-input" type="text" placeholder="Search...">
+                <button type="submit" class="search-button"><i class="fa fa-search"></i></button>
+            </label>
+        </form>
+        <form action="#" class="home" method="get" th:action="@{/logout}">
+            <label>
+                <button type="submit">Log out</button>
+            </label>
+        </form>
+    </h1>
+</header>
+<!--/*@thymesVar id="message" type="java.lang.String"*/-->
+<h1 th:if="${message != null}" th:text="${message}"></h1>
+<!--/*@thymesVar id="userProfile" type="com.grzegorzkartasiewicz.user.UserDTO"*/-->
+<dl th:if="${userProfile != null}" class="Bd P(10px)">
+    <dt th:text="|${userProfile.name} ${userProfile.surname} ${userProfile.age}|">...</dt>
+    <dd>
+        <form th:if="${session.user != null and session.user.id == userProfile.id}" action="#" method="post" th:action="@{/user/posts}">
+            <label>
+                <input type="text" placeholder="What do you think?" name="description" />
+            </label>
+            <button type="submit">Create post >></button>
+        </form>
+        <!--/*@thymesVar id="postsForUser" type="java.lang.List<com.grzegorzkartasiewicz.post.PostDTO>"*/-->
+        <ul>
+            <li th:each="post : ${postsForUser}">
+                <div>
+                    <span th:text="|${post.authorName} ${post.authorSurname}|"></span>
+                    <form th:if="${session.user != null and session.user.id == post.userId.id()}" class="display" action="#" method="post" th:action="@{/user/posts/delete/{postId}(postId=${post.id})}">
+                        <input type="hidden">
+                        <button type="submit">X</button>
+                    </form>
+                </div>
+                <p class="post-description" th:text="|${post.description}|"></p>
+                <dl>
+                    <ul>
+                        <li th:each="comment : ${post.comments}">
+                            <div>
+                                <a th:href="@{/user(id=${comment.userId.id()})}">
+                                    <span th:text="|${comment.authorName} ${comment.authorSurname}|"></span>
+                                </a>
+                                <form th:if="${session.user != null and session.user.id == comment.userId.id()}" class="display" action="#" method="post" th:action="@{/user/comment/delete/{commentId}(commentId=${comment.id})}">
+                                    <input type="hidden">
+                                    <button type="submit">X</button>
+                                </form>
+                            </div>
+                            <span th:text="${comment.description}"></span> <br>
+                        </li>
+                    </ul>
+                    <form action="#" method="post" th:action="@{/user/comments/{postId}(postId=${post.id})}">
+                        <label>
+                            <input type="text" placeholder="What do you think?" name="description" />
+                        </label>
+                        <button type="submit">Create comment >></button>
+                    </form>
+                </dl>
+            </li>
+        </ul>
+    </dd>
+</dl>
+</body>
+</html>

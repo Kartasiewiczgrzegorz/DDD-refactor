@@ -1,2 +1,1 @@
-# DDD-refactor
-DDD refactor
+# DDD-refactoring
