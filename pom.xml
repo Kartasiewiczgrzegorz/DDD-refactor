@@ -25,6 +25,11 @@
 		<module>domain</module>
 		<module>app</module>
 		<module>adapters</module>
+    <module>identity-access-management</module>
+    <module>content-management</module>
+    <module>social-graph</module>
+    <module>messenger</module>
+    <module>notifications</module>
 	</modules>
 
 	<dependencyManagement>
