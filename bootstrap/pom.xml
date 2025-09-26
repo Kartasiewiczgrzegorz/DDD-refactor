@@ -9,9 +9,9 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>monolith</artifactId>
-    <name>monolith</name>
-    <description>Monolith module to package the application</description>
+    <artifactId>bootstrap</artifactId>
+    <name>bootstrap</name>
+    <description>Bootstrap module to package the application</description>
 
     <dependencies>
         <!-- Główna zależność do modułu adapters, który dostarcza całą funkcjonalność -->
