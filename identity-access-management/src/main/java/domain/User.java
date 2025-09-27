@@ -7,6 +7,7 @@ class User {
   String surname;
   Email email;
   Password password;
+  Verification verification;
 
   public User(Name name, Email email, Password password) {
     name.validate();
@@ -15,5 +16,6 @@ class User {
     this.email = email;
     password.validate();
     this.password = password;
+    this.verification = Verification.UNVERIFIED;
   }
 }
