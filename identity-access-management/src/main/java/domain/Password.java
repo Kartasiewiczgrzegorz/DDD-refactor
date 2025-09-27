@@ -12,4 +12,10 @@ public record Password(String password) {
       throw new IllegalArgumentException("Invalid password");
     }
   }
+
+  public void isEqual(String password) {
+    if (!this.password.equals(password)) {
+      throw new IllegalArgumentException("Passwords do not match");
+    }
+  }
 }

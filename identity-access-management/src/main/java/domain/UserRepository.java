@@ -7,4 +7,6 @@ public interface UserRepository {
   User findUserById(UserId verifiedUserId);
 
   void delete(User user);
+
+  User findUserByEmail(String email);
 }

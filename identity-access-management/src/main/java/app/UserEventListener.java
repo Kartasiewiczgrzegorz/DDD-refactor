@@ -11,4 +11,8 @@ public class UserEventListener {
     userService.verifyUser(userEmailVerificationEvent.verifiedUserId(), userEmailVerificationEvent.verification());
   }
 
+  public void resetPassword(ResetPasswordEvent resetPasswordEvent) {
+    userService.resetPassword(resetPasswordEvent.userId(), resetPasswordEvent.newPassword());
+  }
+
 }
