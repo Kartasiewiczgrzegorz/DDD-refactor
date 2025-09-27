@@ -3,6 +3,6 @@ package app;
 import domain.Email;
 import domain.Password;
 
-public record ResetPasswordRequest(String email, String password) {
+public record ResetPasswordRequest(Email email, String password) {
 
 }

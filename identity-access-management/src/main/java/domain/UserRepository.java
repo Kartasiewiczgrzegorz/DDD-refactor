@@ -8,5 +8,5 @@ public interface UserRepository {
 
   void delete(User user);
 
-  User findUserByEmail(String email);
+  User findUserByEmail(Email email);
 }

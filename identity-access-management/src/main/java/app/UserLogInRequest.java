@@ -1,5 +1,7 @@
 package app;
 
-public record UserLogInRequest(String email, String password) {
+import domain.Email;
+
+public record UserLogInRequest(Email email, String password) {
 
 }
