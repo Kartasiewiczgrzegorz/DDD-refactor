@@ -1,12 +1,11 @@
 package adapters;
 
-import domain.Email;
 import domain.InvalidLogInCounter;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
 @Converter(autoApply = false)
-public class InvalidLogInCounterConverter implements
+class InvalidLogInCounterConverter implements
     AttributeConverter<InvalidLogInCounter, Integer> {
 
   @Override

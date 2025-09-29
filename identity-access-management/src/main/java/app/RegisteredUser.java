@@ -1,6 +1,5 @@
 package app;
 
-//TODO add JWT token
-public record RegisteredUser(String firstName, String lastName, String email, String token) {
+public record RegisteredUser(long id, String firstName, String lastName, String email, String token) {
 
 }

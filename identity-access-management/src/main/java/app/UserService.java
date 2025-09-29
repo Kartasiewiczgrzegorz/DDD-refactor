@@ -1,6 +1,5 @@
 package app;
 
-import domain.Password;
 import domain.User;
 import domain.UserId;
 import domain.UserRepository;
@@ -19,11 +18,12 @@ public class UserService {
     //TODO send verification email
 
     Token token = authorizationPort.generateToken(signedUser);
-    return new RegisteredUser(signedUser.getName().name(), signedUser.getName().surname(),
+    return new RegisteredUser(signedUser.getId().id(), signedUser.getName().name(),
+        signedUser.getName().surname(),
         signedUser.getEmail().email(), token.token());
   }
 
-  public LoggedUser logInUser(UserLogInRequest userLogInRequest) {
+  public LoggedUser logIn(UserLogInRequest userLogInRequest) {
     User user = userRepository.findUserByEmail(userLogInRequest.email());
     if (user.isBlocked()) {
       throw new IllegalArgumentException("User is blocked");

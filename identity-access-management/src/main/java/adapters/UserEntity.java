@@ -23,29 +23,29 @@ import lombok.NoArgsConstructor;
 @Table
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserEntity {
+class UserEntity {
 
   @Id
   @EmbeddedId
-  UserId id;
+  private UserId id;
   @Convert(converter = NameConverter.class)
-  Name name;
+  private Name name;
   @Convert(converter = EmailConverter.class)
-  Email email;
+  private Email email;
   @Convert(converter = PasswordConverter.class)
-  Password password;
+  private Password password;
   @Enumerated(EnumType.STRING)
-  Verification verification;
+  private Verification verification;
   @Convert(converter = InvalidLogInCounterConverter.class)
-  InvalidLogInCounter invalidLogInCounter;
+  private InvalidLogInCounter invalidLogInCounter;
   @Enumerated(EnumType.STRING)
-  Blocked blocked;
+  private Blocked blocked;
 
-  public User toDomain() {
+  User toDomain() {
     return new User(id, name, email, password, verification, invalidLogInCounter, blocked);
   }
 
-  public static UserEntity fromDomain(User user) {
+  static UserEntity fromDomain(User user) {
     return new UserEntity(user.getId(), user.getName(), user.getEmail(), user.getPassword(),
         user.getVerification(), user.getInvalidLogInCounter(), user.getBlocked());
   }
