@@ -18,16 +18,13 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(UserController.class)
-class UserControllerTest {
+@WebMvcTest(UserControllerLegacy.class)
+class UserControllerLegacyTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -54,7 +51,7 @@ class UserControllerTest {
         BDDMockito.given(postFacade.getPostsForUser(userId)).willReturn(List.of(postDto));
 
         // when & then
-        mockMvc.perform(MockMvcRequestBuilders.get("/user").param("id", String.valueOf(userId)))
+        mockMvc.perform(MockMvcRequestBuilders.get("/legacy/user").param("id", String.valueOf(userId)))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.view().name("user"))
                 .andExpect(MockMvcResultMatchers.model().attribute("userProfile", userDto))
@@ -70,7 +67,7 @@ class UserControllerTest {
         String description = "New post from a controller test";
 
         // when & then
-        mockMvc.perform(MockMvcRequestBuilders.post("/user/posts")
+        mockMvc.perform(MockMvcRequestBuilders.post("/legacy/user/posts")
                         .param("description", description)
                         .sessionAttr("user", loggedUser))
                 .andExpect(MockMvcResultMatchers.status().is3xxRedirection())

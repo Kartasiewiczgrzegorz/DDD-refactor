@@ -8,7 +8,6 @@
     <groupId>com.grzegorzkartasiewicz</groupId>
     <artifactId>Facebook-Clone</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <relativePath/>
   </parent>
 
   <artifactId>identity-access-management</artifactId>

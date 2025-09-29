@@ -11,14 +11,14 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 @Controller
-@RequestMapping("/user")
-class UserController {
-    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+@RequestMapping("/legacy/user")
+class UserControllerLegacy {
+    private static final Logger logger = LoggerFactory.getLogger(UserControllerLegacy.class);
     public static final String MODEL_ATTRIBUTE_USER = "user";
     private final UserFacade userFacade;
     private final PostFacade postFacade;
 
-    UserController(UserFacade userFacade, PostFacade postFacade) {
+    UserControllerLegacy(UserFacade userFacade, PostFacade postFacade) {
         this.userFacade = userFacade;
         this.postFacade = postFacade;
     }
