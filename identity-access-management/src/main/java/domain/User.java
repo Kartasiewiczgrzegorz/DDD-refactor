@@ -1,14 +1,15 @@
 package domain;
 
 import app.UserRegistrationRequest;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
+@AllArgsConstructor
 public class User {
 
   UserId id;
   Name name;
-  String surname;
   Email email;
   Password password;
   Verification verification;

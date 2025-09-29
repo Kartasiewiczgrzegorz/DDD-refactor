@@ -7,14 +7,14 @@ import domain.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.repository.Repository;
 
-public interface SqlUserRepository extends Repository<User, Long> {
+public interface SqlUserRepository extends Repository<UserEntity, Long> {
 
-  User save(User signedUser);
+  UserEntity save(UserEntity signedUser);
 
-  User findUserById(UserId id);
+  UserEntity findUserById(UserId id);
 
-  void delete(User user);
+  void deleteById(UserId userId);
 
-  User findByEmail(Email email);
+  UserEntity findByEmail(Email email);
 }
 
