@@ -42,7 +42,7 @@ public class User {
   }
 
   public void increaseInvalidLogInCounter() {
-    this.invalidLogInCounter.increase();
+    this.invalidLogInCounter = this.invalidLogInCounter.increase();
 
     if (this.invalidLogInCounter.counter() > 5) {
       this.block();
@@ -54,7 +54,7 @@ public class User {
   }
 
   public boolean isBlocked() {
-    return this.blocked == Blocked.NOT_BLOCKED;
+    return this.blocked == Blocked.BLOCKED;
   }
 
   public void resetPassword(String password) {
