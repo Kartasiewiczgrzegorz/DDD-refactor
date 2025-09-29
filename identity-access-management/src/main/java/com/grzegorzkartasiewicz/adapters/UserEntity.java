@@ -1,0 +1,51 @@
+package com.grzegorzkartasiewicz.adapters;
+
+import com.grzegorzkartasiewicz.domain.Blocked;
+import com.grzegorzkartasiewicz.domain.Email;
+import com.grzegorzkartasiewicz.domain.InvalidLogInCounter;
+import com.grzegorzkartasiewicz.domain.Name;
+import com.grzegorzkartasiewicz.domain.Password;
+import com.grzegorzkartasiewicz.domain.User;
+import com.grzegorzkartasiewicz.domain.UserId;
+import com.grzegorzkartasiewicz.domain.Verification;
+import jakarta.persistence.Convert;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Table
+@AllArgsConstructor
+@NoArgsConstructor
+class UserEntity {
+
+  @Id
+  @EmbeddedId
+  private UserId id;
+  @Convert(converter = NameConverter.class)
+  private Name name;
+  @Convert(converter = EmailConverter.class)
+  private Email email;
+  @Convert(converter = PasswordConverter.class)
+  private Password password;
+  @Enumerated(EnumType.STRING)
+  private Verification verification;
+  @Convert(converter = InvalidLogInCounterConverter.class)
+  private InvalidLogInCounter invalidLogInCounter;
+  @Enumerated(EnumType.STRING)
+  private Blocked blocked;
+
+  User toDomain() {
+    return new User(id, name, email, password, verification, invalidLogInCounter, blocked);
+  }
+
+  static UserEntity fromDomain(User user) {
+    return new UserEntity(user.getId(), user.getName(), user.getEmail(), user.getPassword(),
+        user.getVerification(), user.getInvalidLogInCounter(), user.getBlocked());
+  }
+}
