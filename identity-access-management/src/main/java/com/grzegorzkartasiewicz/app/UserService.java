@@ -5,6 +5,8 @@ import com.grzegorzkartasiewicz.domain.UserId;
 import com.grzegorzkartasiewicz.domain.UserRepository;
 import com.grzegorzkartasiewicz.domain.Verification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.authentication.LockedException;
 
 @RequiredArgsConstructor
 public class UserService {
@@ -26,14 +28,14 @@ public class UserService {
   public LoggedUser logIn(UserLogInRequest userLogInRequest) {
     User user = userRepository.findUserByEmail(userLogInRequest.email());
     if (user.isBlocked()) {
-      throw new IllegalArgumentException("User is blocked");
+      throw new LockedException("User is blocked");
     }
     try {
       user.verifyPassword(userLogInRequest.password());
     } catch (Exception e) {
       user.increaseInvalidLogInCounter();
       userRepository.save(user);
-      throw e;
+      throw new AuthenticationCredentialsNotFoundException("Invalid credentials");
     }
     Token token = authorizationPort.generateToken(user);
     return new LoggedUser(user.getName().name(), user.getName().surname(), user.getEmail().email(),

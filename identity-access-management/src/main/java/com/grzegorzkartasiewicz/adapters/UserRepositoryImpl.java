@@ -20,12 +20,12 @@ public class UserRepositoryImpl implements UserRepository {
 
   @Override
   public User findUserById(UserId verifiedUserId) {
-    return repository.findUserById(verifiedUserId).toDomain();
+    return repository.findUserById(verifiedUserId.id()).toDomain();
   }
 
   @Override
   public void delete(User user) {
-    repository.deleteById(user.getId());
+    repository.deleteById(user.getId().id());
   }
 
   @Override

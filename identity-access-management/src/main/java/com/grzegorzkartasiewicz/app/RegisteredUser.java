@@ -1,5 +1,7 @@
 package com.grzegorzkartasiewicz.app;
 
-public record RegisteredUser(long id, String firstName, String lastName, String email, String token) {
+import java.util.UUID;
+
+public record RegisteredUser(UUID id, String firstName, String lastName, String email, String token) {
 
 }

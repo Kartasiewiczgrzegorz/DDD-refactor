@@ -13,20 +13,23 @@ import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table
+@Table(name = "users")
 @AllArgsConstructor
 @NoArgsConstructor
-class UserEntity {
+public class UserEntity {
 
   @Id
-  @EmbeddedId
-  private UserId id;
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
   @Convert(converter = NameConverter.class)
   private Name name;
   @Convert(converter = EmailConverter.class)
@@ -40,12 +43,12 @@ class UserEntity {
   @Enumerated(EnumType.STRING)
   private Blocked blocked;
 
-  User toDomain() {
-    return new User(id, name, email, password, verification, invalidLogInCounter, blocked);
+  public User toDomain() {
+    return new User(new UserId(id), name, email, password, verification, invalidLogInCounter, blocked);
   }
 
-  static UserEntity fromDomain(User user) {
-    return new UserEntity(user.getId(), user.getName(), user.getEmail(), user.getPassword(),
+  public static UserEntity fromDomain(User user) {
+    return new UserEntity(user.getId().id(), user.getName(), user.getEmail(), user.getPassword(),
         user.getVerification(), user.getInvalidLogInCounter(), user.getBlocked());
   }
 }

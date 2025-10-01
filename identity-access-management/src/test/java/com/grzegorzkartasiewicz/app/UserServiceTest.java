@@ -24,6 +24,7 @@ import com.grzegorzkartasiewicz.domain.User;
 import com.grzegorzkartasiewicz.domain.UserId;
 import com.grzegorzkartasiewicz.domain.UserRepository;
 import com.grzegorzkartasiewicz.domain.Verification;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -50,7 +51,8 @@ class UserServiceTest {
     Name name = new Name("John", "Doe");
     Email email = new Email("john.doe@example.com");
     Password password = new Password("Password123!");
-    testUser = new User(new UserId(1L), name, email, password, Verification.UNVERIFIED,
+    testUser = new User(new UserId(UUID.randomUUID()), name, email, password,
+        Verification.UNVERIFIED,
         new InvalidLogInCounter(0), Blocked.NOT_BLOCKED);
   }
 

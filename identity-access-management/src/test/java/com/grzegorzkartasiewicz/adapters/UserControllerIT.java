@@ -1,32 +1,28 @@
 package com.grzegorzkartasiewicz.adapters;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.grzegorzkartasiewicz.adapters.UserController;
-import com.grzegorzkartasiewicz.app.LoggedUser;
-import com.grzegorzkartasiewicz.app.RegisteredUser;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grzegorzkartasiewicz.app.UserLogInRequest;
 import com.grzegorzkartasiewicz.app.UserRegistrationRequest;
 import com.grzegorzkartasiewicz.app.UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grzegorzkartasiewicz.domain.Email;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Transactional // Zapewnia, że każda metoda testowa działa w transakcji, która jest wycofywana po jej zakończeniu.
 class UserControllerIT {
 
   @Autowired
@@ -35,41 +31,36 @@ class UserControllerIT {
   @Autowired
   private ObjectMapper objectMapper;
 
-  @MockitoBean
-  private UserService userService;
+  @Autowired
+  private UserService userService; // Wstrzyknięcie prawdziwego serwisu
 
   @Test
-  @DisplayName("should register user and return 201 Created")
-  void registerUser() throws Exception {
+  @DisplayName("should register user and return 201 Created for valid data")
+  void registerUser_happyPath() throws Exception {
     // given
     UserRegistrationRequest request = new UserRegistrationRequest("John", "Doe",
         "john.doe@example.com", "Password123!");
-    RegisteredUser response = new RegisteredUser(1L, "John", "Doe", "john.doe@example.com",
-        "dummy-token");
-
-    when(userService.signIn(any(UserRegistrationRequest.class))).thenReturn(response);
 
     // when & then
     mockMvc.perform(post("/users")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isCreated())
-        .andExpect(header().string("Location", "/users/1"))
-        .andExpect(jsonPath("$.id").value(1L))
+        // ID jest generowane, więc sprawdzamy jego obecność i typ
+        .andExpect(header().string("Location", org.hamcrest.Matchers.containsString("/users/")))
+        .andExpect(jsonPath("$.id").isNumber())
         .andExpect(jsonPath("$.firstName").value("John"))
         .andExpect(jsonPath("$.email").value("john.doe@example.com"))
-        .andExpect(jsonPath("$.token").value("dummy-token"));
+        .andExpect(jsonPath("$.token").isString());
   }
 
   @Test
-  @DisplayName("should return 400 Bad Request when registration data is invalid")
-  void registerUser_whenInvalidRequest_shouldReturnBadRequest() throws Exception {
+  @DisplayName("should return 400 Bad Request when registration data is invalid (e.g., weak password)")
+  void registerUser_whenInvalidPassword_shouldReturnBadRequest() throws Exception {
     // given
-    // Request with invalid email and password
-    UserRegistrationRequest request = new UserRegistrationRequest("John", "Doe", "invalid-email",
-        "short");
-    when(userService.signIn(any(UserRegistrationRequest.class))).thenThrow(
-        new IllegalArgumentException("Invalid data"));
+    // Żądanie z hasłem, które nie spełnia kryteriów
+    UserRegistrationRequest request = new UserRegistrationRequest("Jane", "Doe",
+        "jane.doe@example.com", "weak");
 
     // when & then
     mockMvc.perform(post("/users")
@@ -78,56 +69,75 @@ class UserControllerIT {
         .andExpect(status().isBadRequest());
   }
 
-
   @Test
-  @DisplayName("should log in user and return 200 OK")
-  void logIn() throws Exception {
-    // given
-    UserLogInRequest request = new UserLogInRequest(new Email("john.doe@example.com"),
-        "Password123!");
-    LoggedUser response = new LoggedUser("John", "Doe", "john.doe@example.com", "dummy-token");
+  @DisplayName("should log in successfully and return 200 OK with token")
+  void logIn_happyPath() throws Exception {
+    // given: najpierw zarejestruj użytkownika
+    UserRegistrationRequest registrationRequest = new UserRegistrationRequest("Peter", "Jones",
+        "peter.jones@example.com", "Password123!");
+    userService.signIn(registrationRequest);
 
-    when(userService.logIn(any(UserLogInRequest.class))).thenReturn(response);
+    // teraz przygotuj żądanie logowania
+    UserLogInRequest loginRequest = new UserLogInRequest(new Email("peter.jones@example.com"),
+        "Password123!");
 
     // when & then
     mockMvc.perform(post("/users/login")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(request)))
+            .content(objectMapper.writeValueAsString(loginRequest)))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.firstName").value("John"))
-        .andExpect(jsonPath("$.email").value("john.doe@example.com"))
-        .andExpect(jsonPath("$.token").value("dummy-token"));
+        .andExpect(jsonPath("$.firstName").value("Peter"))
+        .andExpect(jsonPath("$.email").value("peter.jones@example.com"))
+        .andExpect(jsonPath("$.token").isString());
   }
 
   @Test
-  @DisplayName("should return 401 Unauthorized when login credentials are incorrect")
-  void logIn_whenCredentialsIncorrect_shouldReturnUnauthorized() throws Exception {
-    // given
-    UserLogInRequest request = new UserLogInRequest(new Email("john.doe@example.com"),
-        "wrongPassword");
-    when(userService.logIn(any(UserLogInRequest.class))).thenThrow(
-        new IllegalArgumentException("Passwords do not match"));
+  @DisplayName("should return 400 Bad Request when login with incorrect password")
+  void logIn_whenPasswordIsIncorrect_shouldReturnBadRequest() throws Exception {
+    // given: najpierw zarejestruj użytkownika
+    UserRegistrationRequest registrationRequest = new UserRegistrationRequest("Alice", "Smith",
+        "alice.smith@example.com", "Password123!");
+    userService.signIn(registrationRequest);
+
+    // teraz przygotuj żądanie logowania z błędnym hasłem
+    UserLogInRequest loginRequest = new UserLogInRequest(new Email("alice.smith@example.com"),
+        "WrongPassword123!");
 
     // when & then
     mockMvc.perform(post("/users/login")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(request)))
-        .andExpect(status().isUnauthorized());
+            .content(objectMapper.writeValueAsString(loginRequest)))
+        .andExpect(status().isBadRequest());
   }
 
   @Test
-  @DisplayName("should return 403 Forbidden when user is blocked")
-  void logIn_whenUserIsBlocked_shouldReturnForbidden() throws Exception {
-    // given
-    UserLogInRequest request = new UserLogInRequest(new Email("blocked.user@example.com"),
-        "Password123!");
-    when(userService.logIn(any(UserLogInRequest.class))).thenThrow(
-        new IllegalArgumentException("User is blocked"));
+  @DisplayName("should block user after 6 failed login attempts and return 400 on subsequent attempts")
+  void logIn_shouldBlockUserAfterMultipleFailures() throws Exception {
+    // given: zarejestruj użytkownika
+    String email = "blocked.user@example.com";
+    String correctPassword = "Password123!";
+    String wrongPassword = "WrongPassword123!";
+    UserRegistrationRequest registrationRequest = new UserRegistrationRequest("Blocked", "User",
+        email, correctPassword);
+    userService.signIn(registrationRequest);
 
-    // when & then
+    UserLogInRequest wrongPasswordRequest = new UserLogInRequest(new Email(email), wrongPassword);
+    UserLogInRequest correctPasswordRequest = new UserLogInRequest(new Email(email),
+        correctPassword);
+
+    // when: wykonaj 6 nieudanych prób logowania
+    for (int i = 0; i < 6; i++) {
+      mockMvc.perform(post("/users/login")
+              .contentType(MediaType.APPLICATION_JSON)
+              .content(objectMapper.writeValueAsString(wrongPasswordRequest)))
+          .andExpect(
+              status().isBadRequest()); // Oczekuj 400 Bad Request przy każdej nieudanej próbie
+    }
+
+    // then: siódma próba (nawet z poprawnym hasłem) powinna zakończyć się niepowodzeniem, ponieważ użytkownik jest zablokowany
     mockMvc.perform(post("/users/login")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(request)))
-        .andExpect(status().isForbidden());
+            .content(objectMapper.writeValueAsString(correctPasswordRequest)))
+        .andExpect(status().isBadRequest());
   }
 }

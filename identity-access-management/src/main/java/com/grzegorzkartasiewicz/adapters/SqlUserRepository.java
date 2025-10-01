@@ -2,15 +2,16 @@ package com.grzegorzkartasiewicz.adapters;
 
 import com.grzegorzkartasiewicz.domain.Email;
 import com.grzegorzkartasiewicz.domain.UserId;
+import java.util.UUID;
 import org.springframework.data.repository.Repository;
 
-public interface SqlUserRepository extends Repository<UserEntity, Long> {
+public interface SqlUserRepository extends Repository<UserEntity, UUID> {
 
   UserEntity save(UserEntity signedUser);
 
-  UserEntity findUserById(UserId id);
+  UserEntity findUserById(UUID id);
 
-  void deleteById(UserId userId);
+  void deleteById(UUID userId);
 
   UserEntity findByEmail(Email email);
 }
