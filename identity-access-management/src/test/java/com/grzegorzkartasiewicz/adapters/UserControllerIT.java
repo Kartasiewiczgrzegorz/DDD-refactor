@@ -55,8 +55,26 @@ class UserControllerIT {
   }
 
   @Test
-  @DisplayName("should return 400 Bad Request when registration data is invalid (e.g., weak password)")
-  void registerUser_whenInvalidPassword_shouldReturnBadRequest() throws Exception {
+  @DisplayName("should return 409 Conflict when trying to register with an existing email")
+  void registerUser_whenEmailExists_shouldReturnConflict() throws Exception {
+    // given
+    UserRegistrationRequest existingUserRequest = new UserRegistrationRequest("Existing", "User",
+        "existing.user@example.com", "Password123!");
+    userService.signIn(existingUserRequest);
+
+    UserRegistrationRequest newUserRequest = new UserRegistrationRequest("New", "User",
+        "existing.user@example.com", "Password456!");
+
+    // when & then
+    mockMvc.perform(post("/users")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(newUserRequest)))
+        .andExpect(status().isConflict());
+  }
+
+  @Test
+  @DisplayName("should return 401 Unauthorized when registration data is invalid (e.g., weak password)")
+  void registerUser_whenInvalidPassword_shouldReturnUnauthorized() throws Exception {
     // given
     UserRegistrationRequest request = new UserRegistrationRequest("Jane", "Doe",
         "jane.doe@example.com", "weak");
@@ -91,8 +109,23 @@ class UserControllerIT {
   }
 
   @Test
-  @DisplayName("should return 400 Bad Request when login with incorrect password")
-  void logIn_whenPasswordIsIncorrect_shouldReturnBadRequest() throws Exception {
+  @DisplayName("should return 401 Unauthorized when login with a non-existent email")
+  void logIn_whenEmailDoesNotExist_shouldReturnUnauthorized() throws Exception {
+    // given
+    UserLogInRequest loginRequest = new UserLogInRequest(new Email("non.existent@example.com"),
+        "Password123!");
+
+    // when & then
+    mockMvc.perform(post("/users/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(loginRequest)))
+        .andExpect(status().isUnauthorized());
+  }
+
+
+  @Test
+  @DisplayName("should return 401 Unauthorized when login with incorrect password")
+  void logIn_whenPasswordIsIncorrect_shouldReturnUnauthorized() throws Exception {
     // given: najpierw zarejestruj użytkownika
     UserRegistrationRequest registrationRequest = new UserRegistrationRequest("Alice", "Smith",
         "alice.smith@example.com", "Password123!");
@@ -110,7 +143,7 @@ class UserControllerIT {
   }
 
   @Test
-  @DisplayName("should block user after 6 failed login attempts and return 400 on subsequent attempts")
+  @DisplayName("should block user after 6 failed login attempts and return 403 on subsequent attempts")
   void logIn_shouldBlockUserAfterMultipleFailures() throws Exception {
     // given:
     String email = "blocked.user@example.com";
@@ -174,4 +207,19 @@ class UserControllerIT {
             .content(objectMapper.writeValueAsString(loginWithOldPasswordRequest)))
         .andExpect(status().isUnauthorized());
   }
+
+  @Test
+  @DisplayName("should return 401 Unauthorized when trying to reset password for a non-existent email")
+  void resetPassword_whenEmailDoesNotExist_shouldReturnUnauthorized() throws Exception {
+    // given
+    ResetPasswordRequest resetRequest = new ResetPasswordRequest(
+        new Email("non.existent@example.com"), "NewPassword123!");
+
+    // when & then
+    mockMvc.perform(post("/users/reset-password")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(resetRequest)))
+        .andExpect(status().isUnauthorized());
+  }
+
 }

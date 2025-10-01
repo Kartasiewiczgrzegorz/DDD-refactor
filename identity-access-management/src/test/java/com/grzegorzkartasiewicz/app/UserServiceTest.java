@@ -7,21 +7,12 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.grzegorzkartasiewicz.app.AuthorizationPort;
-import com.grzegorzkartasiewicz.app.LoggedUser;
-import com.grzegorzkartasiewicz.app.RegisteredUser;
-import com.grzegorzkartasiewicz.app.ResetPasswordRequest;
-import com.grzegorzkartasiewicz.app.Token;
-import com.grzegorzkartasiewicz.app.UserLogInRequest;
-import com.grzegorzkartasiewicz.app.UserRegistrationRequest;
-import com.grzegorzkartasiewicz.app.UserService;
 import com.grzegorzkartasiewicz.domain.Blocked;
 import com.grzegorzkartasiewicz.domain.DomainEventPublisher;
 import com.grzegorzkartasiewicz.domain.Email;
 import com.grzegorzkartasiewicz.domain.InvalidLogInCounter;
 import com.grzegorzkartasiewicz.domain.Name;
 import com.grzegorzkartasiewicz.domain.Password;
-import com.grzegorzkartasiewicz.domain.PasswordDoesNotMatchException;
 import com.grzegorzkartasiewicz.domain.User;
 import com.grzegorzkartasiewicz.domain.UserId;
 import com.grzegorzkartasiewicz.domain.UserRepository;
@@ -55,9 +46,9 @@ class UserServiceTest {
   @BeforeEach
   void setUp() {
     Name name = new Name("John", "Doe");
-    Email email = new Email("john.doe@example.com");
+    Email testEmail = new Email("john.doe@example.com");
     Password password = new Password("Password123!");
-    testUser = new User(new UserId(UUID.randomUUID()), name, email, password,
+    testUser = new User(new UserId(UUID.randomUUID()), name, testEmail, password,
         Verification.UNVERIFIED,
         new InvalidLogInCounter(0), Blocked.NOT_BLOCKED);
   }
@@ -93,6 +84,28 @@ class UserServiceTest {
   }
 
   @Test
+  @DisplayName("signIn should throw UserAlreadyExistsException when user already exists")
+  void signIn_shouldThrowExceptionWhenUserExists() {
+    // given
+    UserRegistrationRequest request = new UserRegistrationRequest("John", "Doe", "john.doe@example.com", "Password123!");
+    when(userRepository.findUserByEmail(new Email(request.email()))).thenReturn(Optional.of(testUser));
+
+    // when & then
+    assertThrows(UserAlreadyExistsException.class, () -> userService.signIn(request));
+  }
+
+  @Test
+  @DisplayName("signIn should throw InvalidCredentialsException for invalid data")
+  void signIn_shouldThrowExceptionForInvalidData() {
+    // given
+    UserRegistrationRequest request = new UserRegistrationRequest(null, "Doe", "john.doe@example.com", "Password123!");
+
+    // when & then
+    assertThrows(InvalidCredentialsException.class, () -> userService.signIn(request));
+  }
+
+
+  @Test
   @DisplayName("logIn should return logged user when credentials are correct")
   void logIn_shouldReturnLoggedUserWhenCredentialsAreCorrect() {
     // given
@@ -100,7 +113,7 @@ class UserServiceTest {
         testUser.getPassword().password());
     Token token = new Token("dummy-token");
 
-    when(userRepository.findUserByEmail(request.email())).thenReturn(Optional.ofNullable(testUser));
+    when(userRepository.findUserByEmail(request.email())).thenReturn(Optional.of(testUser));
     when(authorizationPort.generateToken(testUser)).thenReturn(token);
 
     // when
@@ -115,19 +128,27 @@ class UserServiceTest {
   }
 
   @Test
+  @DisplayName("logIn should throw InvalidCredentialsException when user not found")
+  void logIn_shouldThrowExceptionWhenUserNotFound() {
+    // given
+    UserLogInRequest request = new UserLogInRequest(new Email("nonexistent@example.com"), "password");
+    when(userRepository.findUserByEmail(request.email())).thenReturn(Optional.empty());
+
+    // when & then
+    assertThrows(InvalidCredentialsException.class, () -> userService.logIn(request));
+  }
+
+  @Test
   @DisplayName("logIn should throw exception when user is blocked")
   void logIn_shouldThrowExceptionWhenUserIsBlocked() {
     // given
-    testUser.increaseInvalidLogInCounter(); // Simulate multiple failed logins
-    testUser.increaseInvalidLogInCounter();
-    testUser.increaseInvalidLogInCounter();
-    testUser.increaseInvalidLogInCounter();
-    testUser.increaseInvalidLogInCounter();
-    testUser.increaseInvalidLogInCounter(); // This will block the user
+    for (int i = 0; i < 6; i++) {
+      testUser.increaseInvalidLogInCounter();
+    }
 
     UserLogInRequest request = new UserLogInRequest(testUser.getEmail(),
         testUser.getPassword().password());
-    when(userRepository.findUserByEmail(request.email())).thenReturn(Optional.ofNullable(testUser));
+    when(userRepository.findUserByEmail(request.email())).thenReturn(Optional.of(testUser));
 
     // when & then
     UserBlockedException exception = assertThrows(UserBlockedException.class,
@@ -140,7 +161,7 @@ class UserServiceTest {
   void logIn_shouldIncreaseCounterAndThrowExceptionWhenPasswordIsIncorrect() {
     // given
     UserLogInRequest request = new UserLogInRequest(testUser.getEmail(), "wrong-password");
-    when(userRepository.findUserByEmail(request.email())).thenReturn(Optional.ofNullable(testUser));
+    when(userRepository.findUserByEmail(request.email())).thenReturn(Optional.of(testUser));
 
     // when & then
     assertThrows(InvalidCredentialsException.class, () -> userService.logIn(request));
@@ -150,18 +171,31 @@ class UserServiceTest {
   }
 
   @Test
-  @DisplayName("requestResetPassword should find user by email")
-  void requestResetPassword_shouldFindUserByEmail() {
+  @DisplayName("requestResetPassword should find user by email and publish event")
+  void requestResetPassword_shouldFindUserByEmailAndPublishEvent() {
     // given
     ResetPasswordRequest request = new ResetPasswordRequest(testUser.getEmail(), "newPassword123!");
-    when(userRepository.findUserByEmail(request.email())).thenReturn(Optional.ofNullable(testUser));
+    when(userRepository.findUserByEmail(request.email())).thenReturn(Optional.of(testUser));
 
     // when
     userService.requestResetPassword(request);
 
     // then
     verify(userRepository).findUserByEmail(request.email());
+    verify(domainEventPublisher).publish(any(ResetPasswordEvent.class));
   }
+
+  @Test
+  @DisplayName("requestResetPassword should throw InvalidCredentialsException when user not found")
+  void requestResetPassword_shouldThrowExceptionWhenUserNotFound() {
+    // given
+    ResetPasswordRequest request = new ResetPasswordRequest(new Email("nonexistent@example.com"), "newPassword123!");
+    when(userRepository.findUserByEmail(request.email())).thenReturn(Optional.empty());
+
+    // when & then
+    assertThrows(InvalidCredentialsException.class, () -> userService.requestResetPassword(request));
+  }
+
 
   @Test
   @DisplayName("resetPassword should update password and save user")
@@ -169,7 +203,7 @@ class UserServiceTest {
     // given
     UserId userId = testUser.getId();
     String newPassword = "newValidPassword123!";
-    when(userRepository.findUserById(userId)).thenReturn(Optional.ofNullable(testUser));
+    when(userRepository.findUserById(userId)).thenReturn(Optional.of(testUser));
 
     // when
     userService.resetPassword(userId, newPassword);
@@ -181,11 +215,24 @@ class UserServiceTest {
   }
 
   @Test
+  @DisplayName("resetPassword should throw InvalidCredentialsException when user not found")
+  void resetPassword_shouldThrowExceptionWhenUserNotFound() {
+    // given
+    UserId userId = new UserId(UUID.randomUUID());
+    String newPassword = "newValidPassword123!";
+    when(userRepository.findUserById(userId)).thenReturn(Optional.empty());
+
+    // when & then
+    assertThrows(InvalidCredentialsException.class, () -> userService.resetPassword(userId, newPassword));
+  }
+
+
+  @Test
   @DisplayName("verifyUser should verify and save user when verification is VERIFIED")
   void verifyUser_shouldVerifyAndSaveUserWhenVerificationIsVerified() {
     // given
     UserId userId = testUser.getId();
-    when(userRepository.findUserById(userId)).thenReturn(Optional.ofNullable(testUser));
+    when(userRepository.findUserById(userId)).thenReturn(Optional.of(testUser));
 
     // when
     userService.verifyUser(userId, Verification.VERIFIED);
@@ -201,7 +248,7 @@ class UserServiceTest {
   void verifyUser_shouldDeleteUserWhenVerificationIsUnverified() {
     // given
     UserId userId = testUser.getId();
-    when(userRepository.findUserById(userId)).thenReturn(Optional.ofNullable(testUser));
+    when(userRepository.findUserById(userId)).thenReturn(Optional.of(testUser));
 
     // when
     userService.verifyUser(userId, Verification.UNVERIFIED);
@@ -210,5 +257,16 @@ class UserServiceTest {
     verify(userRepository).findUserById(userId);
     verify(userRepository).delete(testUser);
     verify(userRepository, never()).save(any(User.class));
+  }
+
+  @Test
+  @DisplayName("verifyUser should throw InvalidCredentialsException when user not found")
+  void verifyUser_shouldThrowExceptionWhenUserNotFound() {
+    // given
+    UserId userId = new UserId(UUID.randomUUID());
+    when(userRepository.findUserById(userId)).thenReturn(Optional.empty());
+
+    // when & then
+    assertThrows(InvalidCredentialsException.class, () -> userService.verifyUser(userId, Verification.VERIFIED));
   }
 }
