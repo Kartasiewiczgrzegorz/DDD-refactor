@@ -1,5 +1,6 @@
 package com.grzegorzkartasiewicz.app;
 
+import com.grzegorzkartasiewicz.domain.DomainEventPublisher;
 import com.grzegorzkartasiewicz.domain.User;
 import com.grzegorzkartasiewicz.domain.UserId;
 import com.grzegorzkartasiewicz.domain.UserRepository;
@@ -13,10 +14,17 @@ public class UserService {
 
   private final UserRepository userRepository;
   private final AuthorizationPort authorizationPort;
+  private final DomainEventPublisher publisher;
 
   public RegisteredUser signIn(UserRegistrationRequest userRegistrationRequest) {
-    User signedUser = new User(userRegistrationRequest);
-    signedUser = userRepository.save(signedUser);
+    User signedUser;
+    try {
+      signedUser = new User(userRegistrationRequest);
+      signedUser = userRepository.save(signedUser);
+    } catch (Exception e) {
+      throw new AuthenticationCredentialsNotFoundException("Invalid credentials");
+    }
+
     //TODO send verification email
 
     Token token = authorizationPort.generateToken(signedUser);
@@ -46,6 +54,9 @@ public class UserService {
     User user = userRepository.findUserByEmail(resetPasswordRequest.email());
 
     //TODO send reset password email
+    ResetPasswordEvent resetPasswordEvent = new ResetPasswordEvent(user.getId(),
+        resetPasswordRequest.password());
+    publisher.publish(resetPasswordEvent);
   }
 
   public void resetPassword(UserId userId, String password) {

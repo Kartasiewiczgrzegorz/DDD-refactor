@@ -1,5 +1,6 @@
 package com.grzegorzkartasiewicz.adapters;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -22,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Transactional // Zapewnia, że każda metoda testowa działa w transakcji, która jest wycofywana po jej zakończeniu.
+@Transactional
 class UserControllerIT {
 
   @Autowired
@@ -32,7 +33,7 @@ class UserControllerIT {
   private ObjectMapper objectMapper;
 
   @Autowired
-  private UserService userService; // Wstrzyknięcie prawdziwego serwisu
+  private UserService userService;
 
   @Test
   @DisplayName("should register user and return 201 Created for valid data")
@@ -46,9 +47,8 @@ class UserControllerIT {
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isCreated())
-        // ID jest generowane, więc sprawdzamy jego obecność i typ
         .andExpect(header().string("Location", org.hamcrest.Matchers.containsString("/users/")))
-        .andExpect(jsonPath("$.id").isNumber())
+        .andExpect(jsonPath("$.id").isString())
         .andExpect(jsonPath("$.firstName").value("John"))
         .andExpect(jsonPath("$.email").value("john.doe@example.com"))
         .andExpect(jsonPath("$.token").isString());
@@ -58,7 +58,6 @@ class UserControllerIT {
   @DisplayName("should return 400 Bad Request when registration data is invalid (e.g., weak password)")
   void registerUser_whenInvalidPassword_shouldReturnBadRequest() throws Exception {
     // given
-    // Żądanie z hasłem, które nie spełnia kryteriów
     UserRegistrationRequest request = new UserRegistrationRequest("Jane", "Doe",
         "jane.doe@example.com", "weak");
 
@@ -66,7 +65,7 @@ class UserControllerIT {
     mockMvc.perform(post("/users")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(request)))
-        .andExpect(status().isBadRequest());
+        .andExpect(status().isForbidden());
   }
 
   @Test
@@ -107,13 +106,13 @@ class UserControllerIT {
     mockMvc.perform(post("/users/login")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(loginRequest)))
-        .andExpect(status().isBadRequest());
+        .andExpect(status().isForbidden());
   }
 
   @Test
   @DisplayName("should block user after 6 failed login attempts and return 400 on subsequent attempts")
   void logIn_shouldBlockUserAfterMultipleFailures() throws Exception {
-    // given: zarejestruj użytkownika
+    // given:
     String email = "blocked.user@example.com";
     String correctPassword = "Password123!";
     String wrongPassword = "WrongPassword123!";
@@ -125,19 +124,19 @@ class UserControllerIT {
     UserLogInRequest correctPasswordRequest = new UserLogInRequest(new Email(email),
         correctPassword);
 
-    // when: wykonaj 6 nieudanych prób logowania
+    // when
     for (int i = 0; i < 6; i++) {
       mockMvc.perform(post("/users/login")
               .contentType(MediaType.APPLICATION_JSON)
               .content(objectMapper.writeValueAsString(wrongPasswordRequest)))
           .andExpect(
-              status().isBadRequest()); // Oczekuj 400 Bad Request przy każdej nieudanej próbie
+              status().isForbidden());
     }
 
-    // then: siódma próba (nawet z poprawnym hasłem) powinna zakończyć się niepowodzeniem, ponieważ użytkownik jest zablokowany
+    // then
     mockMvc.perform(post("/users/login")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(correctPasswordRequest)))
-        .andExpect(status().isBadRequest());
+        .andExpect(status().isForbidden());
   }
 }

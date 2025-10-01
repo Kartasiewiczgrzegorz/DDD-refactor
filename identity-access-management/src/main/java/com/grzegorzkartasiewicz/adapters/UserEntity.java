@@ -44,11 +44,13 @@ public class UserEntity {
   private Blocked blocked;
 
   public User toDomain() {
-    return new User(new UserId(id), name, email, password, verification, invalidLogInCounter, blocked);
+    return new User(new UserId(id), name, email, password, verification, invalidLogInCounter,
+        blocked);
   }
 
   public static UserEntity fromDomain(User user) {
-    return new UserEntity(user.getId().id(), user.getName(), user.getEmail(), user.getPassword(),
+    return new UserEntity(user.getId() == null ? null : user.getId().id(), user.getName(),
+        user.getEmail(), user.getPassword(),
         user.getVerification(), user.getInvalidLogInCounter(), user.getBlocked());
   }
 }

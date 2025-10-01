@@ -2,6 +2,7 @@ package com.grzegorzkartasiewicz.adapters;
 
 import com.grzegorzkartasiewicz.app.LoggedUser;
 import com.grzegorzkartasiewicz.app.RegisteredUser;
+import com.grzegorzkartasiewicz.app.ResetPasswordRequest;
 import com.grzegorzkartasiewicz.app.UserLogInRequest;
 import com.grzegorzkartasiewicz.app.UserRegistrationRequest;
 import com.grzegorzkartasiewicz.app.UserService;
@@ -29,5 +30,11 @@ class UserController {
   @PostMapping("/login")
   ResponseEntity<LoggedUser> logIn(@RequestBody UserLogInRequest userLogInRequest) {
     return ResponseEntity.ok(userService.logIn(userLogInRequest));
+  }
+
+  @PostMapping("/reset-password")
+  ResponseEntity<Void> resetPassword(@RequestBody ResetPasswordRequest resetPasswordRequest) {
+    userService.requestResetPassword(resetPasswordRequest);
+    return ResponseEntity.ok().build();
   }
 }
