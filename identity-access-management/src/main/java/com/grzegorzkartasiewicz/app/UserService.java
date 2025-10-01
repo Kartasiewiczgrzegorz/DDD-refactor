@@ -19,7 +19,8 @@ public class UserService {
   public RegisteredUser signIn(UserRegistrationRequest userRegistrationRequest) {
     User signedUser;
     try {
-      signedUser = new User(userRegistrationRequest);
+      signedUser = new User(userRegistrationRequest.firstName(), userRegistrationRequest.lastName(),
+          userRegistrationRequest.email(), userRegistrationRequest.password());
       signedUser = userRepository.save(signedUser);
     } catch (Exception e) {
       throw new AuthenticationCredentialsNotFoundException("Invalid credentials");

@@ -1,6 +1,5 @@
 package com.grzegorzkartasiewicz.domain;
 
-import com.grzegorzkartasiewicz.app.UserRegistrationRequest;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -28,9 +27,9 @@ public class User {
     this.blocked = Blocked.NOT_BLOCKED;
   }
 
-  public User(UserRegistrationRequest userRegistrationRequest) {
-    this(new Name(userRegistrationRequest.firstName(), userRegistrationRequest.lastName()), new Email(
-        userRegistrationRequest.email()), new Password(userRegistrationRequest.password()));
+  public User(String firstName, String surname, String email, String password) {
+    this(new Name(firstName, surname), new Email(
+        email), new Password(password));
   }
 
   public void verify() {
