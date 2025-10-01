@@ -18,13 +18,13 @@ class NameTest {
   void validateShouldThrowExceptionWhenNameIsNull() {
     Name name = new Name(null, "Surname");
 
-    assertThrows(IllegalArgumentException.class, name::validate);
+    assertThrows(ValidationException.class, name::validate);
   }
 
   @Test
   void validateShouldThrowExceptionWhenSurnameIsNull() {
     Name name = new Name("Name", null);
 
-    assertThrows(IllegalArgumentException.class, name::validate);
+    assertThrows(ValidationException.class, name::validate);
   }
 }

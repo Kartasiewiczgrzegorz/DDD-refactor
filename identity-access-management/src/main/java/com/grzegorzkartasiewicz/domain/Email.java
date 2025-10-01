@@ -6,10 +6,10 @@ public record Email(String email) {
 
   public void validate() {
     if (this.email == null) {
-      throw new IllegalArgumentException("Email is required");
+      throw new ValidationException("Email is required");
     }
     if (!this.email.matches(EMAIL_VALIDATION_REGEX)) {
-      throw new IllegalArgumentException("Invalid email");
+      throw new ValidationException("Invalid email");
     }
   }
 }

@@ -4,6 +4,7 @@ import com.grzegorzkartasiewicz.domain.Email;
 import com.grzegorzkartasiewicz.domain.User;
 import com.grzegorzkartasiewicz.domain.UserId;
 import com.grzegorzkartasiewicz.domain.UserRepository;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -19,8 +20,8 @@ public class UserRepositoryImpl implements UserRepository {
   }
 
   @Override
-  public User findUserById(UserId verifiedUserId) {
-    return repository.findUserById(verifiedUserId.id()).toDomain();
+  public Optional<User> findUserById(UserId verifiedUserId) {
+    return Optional.ofNullable(repository.findUserById(verifiedUserId.id())).map(UserEntity::toDomain);
   }
 
   @Override
@@ -29,7 +30,7 @@ public class UserRepositoryImpl implements UserRepository {
   }
 
   @Override
-  public User findUserByEmail(Email email) {
-    return repository.findByEmail(email).toDomain();
+  public Optional<User> findUserByEmail(Email email) {
+    return Optional.ofNullable(repository.findByEmail(email)).map(UserEntity::toDomain);
   }
 }

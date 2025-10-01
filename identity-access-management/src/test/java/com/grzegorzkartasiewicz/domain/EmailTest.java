@@ -18,13 +18,13 @@ class EmailTest {
   void validateShouldThrowExceptionWhenEmailIsNull() {
     Email email = new Email(null);
 
-    assertThrows(IllegalArgumentException.class, email::validate);
+    assertThrows(ValidationException.class, email::validate);
   }
 
   @Test
   void validateShouldThrowExceptionWhenEmailIsInvalid() {
     Email email = new Email("invalidEmail");
 
-    assertThrows(IllegalArgumentException.class, email::validate);
+    assertThrows(ValidationException.class, email::validate);
   }
 }

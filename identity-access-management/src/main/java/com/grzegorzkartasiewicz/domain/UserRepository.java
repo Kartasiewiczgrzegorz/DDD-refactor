@@ -1,12 +1,14 @@
 package com.grzegorzkartasiewicz.domain;
 
+import java.util.Optional;
+
 public interface UserRepository {
 
   User save(User signedUser);
 
-  User findUserById(UserId verifiedUserId);
+  Optional<User> findUserById(UserId verifiedUserId);
 
   void delete(User user);
 
-  User findUserByEmail(Email email);
+  Optional<User> findUserByEmail(Email email);
 }

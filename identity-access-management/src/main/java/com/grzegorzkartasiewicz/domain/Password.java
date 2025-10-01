@@ -6,16 +6,16 @@ public record Password(String password) {
 
   public void validate() {
     if (password == null) {
-      throw new IllegalArgumentException("Password is required");
+      throw new ValidationException("Password is required");
     }
     if (!password.matches(PASSWORD_VALIDATION_REGEX)) {
-      throw new IllegalArgumentException("Invalid password");
+      throw new ValidationException("Invalid password");
     }
   }
 
   public void isEqual(String password) {
     if (!this.password.equals(password)) {
-      throw new IllegalArgumentException("Passwords do not match");
+      throw new PasswordDoesNotMatchException("Passwords do not match");
     }
   }
 }

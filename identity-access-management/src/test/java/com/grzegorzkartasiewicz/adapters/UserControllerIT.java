@@ -65,7 +65,7 @@ class UserControllerIT {
     mockMvc.perform(post("/users")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(request)))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isUnauthorized());
   }
 
   @Test
@@ -106,7 +106,7 @@ class UserControllerIT {
     mockMvc.perform(post("/users/login")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(loginRequest)))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isUnauthorized());
   }
 
   @Test
@@ -130,7 +130,7 @@ class UserControllerIT {
               .contentType(MediaType.APPLICATION_JSON)
               .content(objectMapper.writeValueAsString(wrongPasswordRequest)))
           .andExpect(
-              status().isForbidden());
+              status().isUnauthorized());
     }
 
     // then
@@ -172,6 +172,6 @@ class UserControllerIT {
     mockMvc.perform(post("/users/login")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(loginWithOldPasswordRequest)))
-        .andExpect(status().isForbidden());
+        .andExpect(status().isUnauthorized());
   }
 }

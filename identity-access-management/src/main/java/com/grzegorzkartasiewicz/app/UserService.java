@@ -1,13 +1,14 @@
 package com.grzegorzkartasiewicz.app;
 
 import com.grzegorzkartasiewicz.domain.DomainEventPublisher;
+import com.grzegorzkartasiewicz.domain.Email;
+import com.grzegorzkartasiewicz.domain.PasswordDoesNotMatchException;
 import com.grzegorzkartasiewicz.domain.User;
 import com.grzegorzkartasiewicz.domain.UserId;
 import com.grzegorzkartasiewicz.domain.UserRepository;
+import com.grzegorzkartasiewicz.domain.ValidationException;
 import com.grzegorzkartasiewicz.domain.Verification;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
-import org.springframework.security.authentication.LockedException;
 
 @RequiredArgsConstructor
 public class UserService {
@@ -17,13 +18,16 @@ public class UserService {
   private final DomainEventPublisher publisher;
 
   public RegisteredUser signIn(UserRegistrationRequest userRegistrationRequest) {
+    if (userRepository.findUserByEmail(new Email(userRegistrationRequest.email())).isPresent()) {
+      throw new UserAlreadyExistsException("User already exists");
+    }
     User signedUser;
     try {
       signedUser = new User(userRegistrationRequest.firstName(), userRegistrationRequest.lastName(),
           userRegistrationRequest.email(), userRegistrationRequest.password());
       signedUser = userRepository.save(signedUser);
-    } catch (Exception e) {
-      throw new AuthenticationCredentialsNotFoundException("Invalid credentials");
+    } catch (ValidationException e) {
+      throw new InvalidCredentialsException("Invalid credentials");
     }
 
     //TODO send verification email
@@ -35,16 +39,17 @@ public class UserService {
   }
 
   public LoggedUser logIn(UserLogInRequest userLogInRequest) {
-    User user = userRepository.findUserByEmail(userLogInRequest.email());
+    User user = userRepository.findUserByEmail(userLogInRequest.email())
+        .orElseThrow(() -> new InvalidCredentialsException("Invalid credentials"));
     if (user.isBlocked()) {
-      throw new LockedException("User is blocked");
+      throw new UserBlockedException("User is blocked");
     }
     try {
       user.verifyPassword(userLogInRequest.password());
-    } catch (Exception e) {
+    } catch (PasswordDoesNotMatchException e) {
       user.increaseInvalidLogInCounter();
       userRepository.save(user);
-      throw new AuthenticationCredentialsNotFoundException("Invalid credentials");
+      throw new InvalidCredentialsException("Invalid credentials");
     }
     Token token = authorizationPort.generateToken(user);
     return new LoggedUser(user.getName().name(), user.getName().surname(), user.getEmail().email(),
@@ -52,7 +57,8 @@ public class UserService {
   }
 
   public void requestResetPassword(ResetPasswordRequest resetPasswordRequest) {
-    User user = userRepository.findUserByEmail(resetPasswordRequest.email());
+    User user = userRepository.findUserByEmail(resetPasswordRequest.email())
+        .orElseThrow(() -> new InvalidCredentialsException("Invalid credentials"));
 
     //TODO send reset password email
     ResetPasswordEvent resetPasswordEvent = new ResetPasswordEvent(user.getId(),
@@ -61,13 +67,15 @@ public class UserService {
   }
 
   public void resetPassword(UserId userId, String password) {
-    User user = userRepository.findUserById(userId);
+    User user = userRepository.findUserById(userId)
+        .orElseThrow(() -> new InvalidCredentialsException("Invalid credentials"));
     user.resetPassword(password);
     userRepository.save(user);
   }
 
   public void verifyUser(UserId verifiedUserId, Verification verification) {
-    User user = userRepository.findUserById(verifiedUserId);
+    User user = userRepository.findUserById(verifiedUserId)
+        .orElseThrow(() -> new InvalidCredentialsException("Invalid credentials"));
     if (verification.equals(Verification.VERIFIED)) {
       user.verify();
       userRepository.save(user);

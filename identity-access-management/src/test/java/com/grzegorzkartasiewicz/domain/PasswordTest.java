@@ -18,14 +18,14 @@ class PasswordTest {
   void validateShouldThrowExceptionWhenPasswordIsNull() {
     Password password = new Password(null);
 
-    assertThrows(IllegalArgumentException.class, password::validate);
+    assertThrows(ValidationException.class, password::validate);
   }
 
   @Test
   void validateShouldThrowExceptionWhenPasswordIsInvalid() {
     Password password = new Password("bad");
 
-    assertThrows(IllegalArgumentException.class, password::validate);
+    assertThrows(ValidationException.class, password::validate);
   }
 
 }

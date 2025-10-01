@@ -16,14 +16,18 @@ import com.grzegorzkartasiewicz.app.UserLogInRequest;
 import com.grzegorzkartasiewicz.app.UserRegistrationRequest;
 import com.grzegorzkartasiewicz.app.UserService;
 import com.grzegorzkartasiewicz.domain.Blocked;
+import com.grzegorzkartasiewicz.domain.DomainEventPublisher;
 import com.grzegorzkartasiewicz.domain.Email;
 import com.grzegorzkartasiewicz.domain.InvalidLogInCounter;
 import com.grzegorzkartasiewicz.domain.Name;
 import com.grzegorzkartasiewicz.domain.Password;
+import com.grzegorzkartasiewicz.domain.PasswordDoesNotMatchException;
 import com.grzegorzkartasiewicz.domain.User;
 import com.grzegorzkartasiewicz.domain.UserId;
 import com.grzegorzkartasiewicz.domain.UserRepository;
+import com.grzegorzkartasiewicz.domain.ValidationException;
 import com.grzegorzkartasiewicz.domain.Verification;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -41,6 +45,8 @@ class UserServiceTest {
   private UserRepository userRepository;
   @Mock
   private AuthorizationPort authorizationPort;
+  @Mock
+  private DomainEventPublisher domainEventPublisher;
   @InjectMocks
   private UserService userService;
 
@@ -94,7 +100,7 @@ class UserServiceTest {
         testUser.getPassword().password());
     Token token = new Token("dummy-token");
 
-    when(userRepository.findUserByEmail(request.email())).thenReturn(testUser);
+    when(userRepository.findUserByEmail(request.email())).thenReturn(Optional.ofNullable(testUser));
     when(authorizationPort.generateToken(testUser)).thenReturn(token);
 
     // when
@@ -121,10 +127,10 @@ class UserServiceTest {
 
     UserLogInRequest request = new UserLogInRequest(testUser.getEmail(),
         testUser.getPassword().password());
-    when(userRepository.findUserByEmail(request.email())).thenReturn(testUser);
+    when(userRepository.findUserByEmail(request.email())).thenReturn(Optional.ofNullable(testUser));
 
     // when & then
-    IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+    UserBlockedException exception = assertThrows(UserBlockedException.class,
         () -> userService.logIn(request));
     assertThat(exception.getMessage()).isEqualTo("User is blocked");
   }
@@ -134,10 +140,10 @@ class UserServiceTest {
   void logIn_shouldIncreaseCounterAndThrowExceptionWhenPasswordIsIncorrect() {
     // given
     UserLogInRequest request = new UserLogInRequest(testUser.getEmail(), "wrong-password");
-    when(userRepository.findUserByEmail(request.email())).thenReturn(testUser);
+    when(userRepository.findUserByEmail(request.email())).thenReturn(Optional.ofNullable(testUser));
 
     // when & then
-    assertThrows(IllegalArgumentException.class, () -> userService.logIn(request));
+    assertThrows(InvalidCredentialsException.class, () -> userService.logIn(request));
 
     verify(userRepository).save(testUser);
     assertThat(testUser.getInvalidLogInCounter().counter()).isEqualTo(1);
@@ -148,7 +154,7 @@ class UserServiceTest {
   void requestResetPassword_shouldFindUserByEmail() {
     // given
     ResetPasswordRequest request = new ResetPasswordRequest(testUser.getEmail(), "newPassword123!");
-    when(userRepository.findUserByEmail(request.email())).thenReturn(testUser);
+    when(userRepository.findUserByEmail(request.email())).thenReturn(Optional.ofNullable(testUser));
 
     // when
     userService.requestResetPassword(request);
@@ -163,7 +169,7 @@ class UserServiceTest {
     // given
     UserId userId = testUser.getId();
     String newPassword = "newValidPassword123!";
-    when(userRepository.findUserById(userId)).thenReturn(testUser);
+    when(userRepository.findUserById(userId)).thenReturn(Optional.ofNullable(testUser));
 
     // when
     userService.resetPassword(userId, newPassword);
@@ -179,7 +185,7 @@ class UserServiceTest {
   void verifyUser_shouldVerifyAndSaveUserWhenVerificationIsVerified() {
     // given
     UserId userId = testUser.getId();
-    when(userRepository.findUserById(userId)).thenReturn(testUser);
+    when(userRepository.findUserById(userId)).thenReturn(Optional.ofNullable(testUser));
 
     // when
     userService.verifyUser(userId, Verification.VERIFIED);
@@ -195,7 +201,7 @@ class UserServiceTest {
   void verifyUser_shouldDeleteUserWhenVerificationIsUnverified() {
     // given
     UserId userId = testUser.getId();
-    when(userRepository.findUserById(userId)).thenReturn(testUser);
+    when(userRepository.findUserById(userId)).thenReturn(Optional.ofNullable(testUser));
 
     // when
     userService.verifyUser(userId, Verification.UNVERIFIED);

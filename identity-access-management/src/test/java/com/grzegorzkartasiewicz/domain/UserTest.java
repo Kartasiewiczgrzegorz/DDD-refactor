@@ -36,7 +36,7 @@ class UserTest {
   void verifyPasswordShouldThrowExceptionIfPasswordIsNotEqual() {
     User testUser = getTestUser();
 
-    assertThrows(IllegalArgumentException.class, () -> testUser.verifyPassword("NotEqualPassword"));
+    assertThrows(PasswordDoesNotMatchException.class, () -> testUser.verifyPassword("NotEqualPassword"));
   }
 
   @Test
