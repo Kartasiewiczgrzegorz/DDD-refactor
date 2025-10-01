@@ -1,6 +1,5 @@
 package com.grzegorzkartasiewicz.adapters;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -8,6 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.grzegorzkartasiewicz.app.ResetPasswordRequest;
 import com.grzegorzkartasiewicz.app.UserLogInRequest;
 import com.grzegorzkartasiewicz.app.UserRegistrationRequest;
 import com.grzegorzkartasiewicz.app.UserService;
@@ -137,6 +137,41 @@ class UserControllerIT {
     mockMvc.perform(post("/users/login")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(correctPasswordRequest)))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  @DisplayName("should reset password and allow login with new password")
+  void resetPassword_shouldReturnOk_andAllowLoginWithNewPassword() throws Exception {
+    // given
+    String email = "reset.password@example.com";
+    String oldPassword = "OldPassword123!";
+    String newPassword = "NewPassword456!";
+    UserRegistrationRequest registrationRequest = new UserRegistrationRequest("Reset", "Password",
+        email, oldPassword);
+    userService.signIn(registrationRequest);
+
+    // when
+    ResetPasswordRequest resetRequest = new ResetPasswordRequest(new Email(email), newPassword);
+    mockMvc.perform(post("/users/reset-password")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(resetRequest)))
+        .andExpect(status().isOk());
+
+    // then
+    UserLogInRequest loginWithNewPasswordRequest = new UserLogInRequest(new Email(email),
+        newPassword);
+    mockMvc.perform(post("/users/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(loginWithNewPasswordRequest)))
+        .andExpect(status().isOk());
+
+    // and
+    UserLogInRequest loginWithOldPasswordRequest = new UserLogInRequest(new Email(email),
+        oldPassword);
+    mockMvc.perform(post("/users/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(loginWithOldPasswordRequest)))
         .andExpect(status().isForbidden());
   }
 }
