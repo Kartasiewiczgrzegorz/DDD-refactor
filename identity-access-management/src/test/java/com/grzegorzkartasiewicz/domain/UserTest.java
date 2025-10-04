@@ -3,12 +3,6 @@ package com.grzegorzkartasiewicz.domain;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.grzegorzkartasiewicz.domain.Blocked;
-import com.grzegorzkartasiewicz.domain.Email;
-import com.grzegorzkartasiewicz.domain.Name;
-import com.grzegorzkartasiewicz.domain.Password;
-import com.grzegorzkartasiewicz.domain.User;
-import com.grzegorzkartasiewicz.domain.Verification;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
@@ -44,19 +38,19 @@ class UserTest {
     User testUser = getTestUser();
     int initialValue = testUser.getInvalidLogInCounter().counter();
 
-    testUser.increaseInvalidLogInCounter();
+    testUser.recordFailedLoginAttempt();
 
     assertThat(testUser.getInvalidLogInCounter().counter()).isEqualTo(initialValue + 1);
   }
 
   @Test
-  void increaseInvalidLogInCounterShouldBlockAfterCounterHitFive() {
+  void recordFailedLoginAttemptHitFive() {
     User testUser = getTestUser();
 
     assertThat(testUser.getBlocked()).isEqualTo(Blocked.NOT_BLOCKED);
 
     for (int i = 1; i <= 6; i++) {
-      testUser.increaseInvalidLogInCounter();
+      testUser.recordFailedLoginAttempt();
     }
 
     assertThat(testUser.getBlocked()).isEqualTo(Blocked.BLOCKED);
@@ -67,7 +61,7 @@ class UserTest {
     User testUser = getTestUser();
 
     for (int i = 1; i <= 6; i++) {
-      testUser.increaseInvalidLogInCounter();
+      testUser.recordFailedLoginAttempt();
     }
 
 

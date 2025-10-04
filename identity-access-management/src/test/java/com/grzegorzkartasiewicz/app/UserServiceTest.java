@@ -16,7 +16,6 @@ import com.grzegorzkartasiewicz.domain.Password;
 import com.grzegorzkartasiewicz.domain.User;
 import com.grzegorzkartasiewicz.domain.UserId;
 import com.grzegorzkartasiewicz.domain.UserRepository;
-import com.grzegorzkartasiewicz.domain.ValidationException;
 import com.grzegorzkartasiewicz.domain.Verification;
 import java.util.Optional;
 import java.util.UUID;
@@ -143,7 +142,7 @@ class UserServiceTest {
   void logIn_shouldThrowExceptionWhenUserIsBlocked() {
     // given
     for (int i = 0; i < 6; i++) {
-      testUser.increaseInvalidLogInCounter();
+      testUser.recordFailedLoginAttempt();
     }
 
     UserLogInRequest request = new UserLogInRequest(testUser.getEmail(),

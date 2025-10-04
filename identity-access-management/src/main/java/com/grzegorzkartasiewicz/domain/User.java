@@ -16,6 +16,7 @@ public class User {
   Blocked blocked;
 
   User(Name name, Email email, Password password) {
+    this.id = new UserId(null);
     name.validate();
     this.name = name;
     email.validate();
@@ -27,8 +28,8 @@ public class User {
     this.blocked = Blocked.NOT_BLOCKED;
   }
 
-  public User(String firstName, String surname, String email, String password) {
-    this(new Name(firstName, surname), new Email(
+  public static User createNew(String firstName, String surname, String email, String password) {
+    return new User(new Name(firstName, surname), new Email(
         email), new Password(password));
   }
 
@@ -40,7 +41,7 @@ public class User {
     this.password.isEqual(password);
   }
 
-  public void increaseInvalidLogInCounter() {
+  public void recordFailedLoginAttempt() {
     this.invalidLogInCounter = this.invalidLogInCounter.increase();
 
     if (this.invalidLogInCounter.counter() > 5) {
