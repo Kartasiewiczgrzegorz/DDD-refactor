@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 class UserTest {
 
@@ -23,14 +24,15 @@ class UserTest {
   void verifyPasswordShouldNotThrowExceptionIfPasswordIsEqual() {
     User testUser = getTestUser();
 
-    testUser.verifyPassword("Passw0rd$#");
+    testUser.verifyPassword("Passw0rd$#", new TestPasswordEncoder());
   }
 
   @Test
   void verifyPasswordShouldThrowExceptionIfPasswordIsNotEqual() {
     User testUser = getTestUser();
 
-    assertThrows(PasswordDoesNotMatchException.class, () -> testUser.verifyPassword("NotEqualPassword"));
+    assertThrows(PasswordDoesNotMatchException.class,
+        () -> testUser.verifyPassword("NotEqualPassword", new TestPasswordEncoder()));
   }
 
   @Test
@@ -63,7 +65,6 @@ class UserTest {
     for (int i = 1; i <= 6; i++) {
       testUser.recordFailedLoginAttempt();
     }
-
 
     assertThat(testUser.isBlocked()).isTrue();
   }

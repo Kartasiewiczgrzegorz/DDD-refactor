@@ -95,7 +95,7 @@ class UserControllerIT {
     userService.signIn(registrationRequest);
 
     // teraz przygotuj żądanie logowania
-    UserLogInRequest loginRequest = new UserLogInRequest(new Email("peter.jones@example.com"),
+    UserLogInRequest loginRequest = new UserLogInRequest("peter.jones@example.com",
         "Password123!");
 
     // when & then
@@ -112,7 +112,7 @@ class UserControllerIT {
   @DisplayName("should return 401 Unauthorized when login with a non-existent email")
   void logIn_whenEmailDoesNotExist_shouldReturnUnauthorized() throws Exception {
     // given
-    UserLogInRequest loginRequest = new UserLogInRequest(new Email("non.existent@example.com"),
+    UserLogInRequest loginRequest = new UserLogInRequest("non.existent@example.com",
         "Password123!");
 
     // when & then
@@ -132,7 +132,7 @@ class UserControllerIT {
     userService.signIn(registrationRequest);
 
     // teraz przygotuj żądanie logowania z błędnym hasłem
-    UserLogInRequest loginRequest = new UserLogInRequest(new Email("alice.smith@example.com"),
+    UserLogInRequest loginRequest = new UserLogInRequest("alice.smith@example.com",
         "WrongPassword123!");
 
     // when & then
@@ -153,8 +153,8 @@ class UserControllerIT {
         email, correctPassword);
     userService.signIn(registrationRequest);
 
-    UserLogInRequest wrongPasswordRequest = new UserLogInRequest(new Email(email), wrongPassword);
-    UserLogInRequest correctPasswordRequest = new UserLogInRequest(new Email(email),
+    UserLogInRequest wrongPasswordRequest = new UserLogInRequest(email, wrongPassword);
+    UserLogInRequest correctPasswordRequest = new UserLogInRequest(email,
         correctPassword);
 
     // when
@@ -185,14 +185,14 @@ class UserControllerIT {
     userService.signIn(registrationRequest);
 
     // when
-    ResetPasswordRequest resetRequest = new ResetPasswordRequest(new Email(email), newPassword);
+    ResetPasswordRequest resetRequest = new ResetPasswordRequest(email, newPassword);
     mockMvc.perform(post("/users/reset-password")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(resetRequest)))
         .andExpect(status().isOk());
 
     // then
-    UserLogInRequest loginWithNewPasswordRequest = new UserLogInRequest(new Email(email),
+    UserLogInRequest loginWithNewPasswordRequest = new UserLogInRequest(email,
         newPassword);
     mockMvc.perform(post("/users/login")
             .contentType(MediaType.APPLICATION_JSON)
@@ -200,7 +200,7 @@ class UserControllerIT {
         .andExpect(status().isOk());
 
     // and
-    UserLogInRequest loginWithOldPasswordRequest = new UserLogInRequest(new Email(email),
+    UserLogInRequest loginWithOldPasswordRequest = new UserLogInRequest(email,
         oldPassword);
     mockMvc.perform(post("/users/login")
             .contentType(MediaType.APPLICATION_JSON)
@@ -212,8 +212,8 @@ class UserControllerIT {
   @DisplayName("should return 401 Unauthorized when trying to reset password for a non-existent email")
   void resetPassword_whenEmailDoesNotExist_shouldReturnUnauthorized() throws Exception {
     // given
-    ResetPasswordRequest resetRequest = new ResetPasswordRequest(
-        new Email("non.existent@example.com"), "NewPassword123!");
+    ResetPasswordRequest resetRequest = new ResetPasswordRequest("non.existent@example.com",
+        "NewPassword123!");
 
     // when & then
     mockMvc.perform(post("/users/reset-password")

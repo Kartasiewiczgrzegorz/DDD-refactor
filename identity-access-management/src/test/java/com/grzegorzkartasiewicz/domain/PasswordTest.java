@@ -9,23 +9,17 @@ class PasswordTest {
 
   @Test
   void validateShouldNotThrowExceptionWhenPasswordIsValid() {
-    Password password = new Password("Passw0ord$#");
-
-    password.validate();
+    Password.validate("Passw0ord$#");
   }
 
   @Test
   void validateShouldThrowExceptionWhenPasswordIsNull() {
-    Password password = new Password(null);
-
-    assertThrows(ValidationException.class, password::validate);
+    assertThrows(ValidationException.class, () -> Password.validate(null));
   }
 
   @Test
   void validateShouldThrowExceptionWhenPasswordIsInvalid() {
-    Password password = new Password("bad");
-
-    assertThrows(ValidationException.class, password::validate);
+    assertThrows(ValidationException.class, () -> Password.validate("bad"));
   }
 
 }

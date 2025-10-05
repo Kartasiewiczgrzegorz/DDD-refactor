@@ -9,6 +9,7 @@ import com.grzegorzkartasiewicz.domain.UserRepository;
 import com.grzegorzkartasiewicz.domain.ValidationException;
 import com.grzegorzkartasiewicz.domain.Verification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @RequiredArgsConstructor
 public class UserService {
@@ -16,6 +17,7 @@ public class UserService {
   private final UserRepository userRepository;
   private final AuthorizationPort authorizationPort;
   private final DomainEventPublisher publisher;
+  private final PasswordEncoder passwordEncoder;
 
   public RegisteredUser signIn(UserRegistrationRequest userRegistrationRequest) {
     validateIfUserExists(userRegistrationRequest.email());
@@ -47,7 +49,7 @@ public class UserService {
 
   public void resetPassword(UserId userId, String password) {
     User user = findUserByIdOrThrow(userId);
-    user.resetPassword(password);
+    user.resetPassword(password, passwordEncoder);
     userRepository.save(user);
   }
 
@@ -63,7 +65,7 @@ public class UserService {
 
   private void validateCredentialsAndHandleFailedAttempt(UserLogInRequest userLogInRequest, User user) {
     try {
-      user.verifyPassword(userLogInRequest.password());
+      user.verifyPassword(userLogInRequest.password(), passwordEncoder);
     } catch (PasswordDoesNotMatchException e) {
       user.recordFailedLoginAttempt();
       userRepository.save(user);
@@ -94,9 +96,9 @@ public class UserService {
         signedUser.getEmail().email(), token.token());
   }
 
-  private static User mapRequestToUser(UserRegistrationRequest userRegistrationRequest) {
+  private User mapRequestToUser(UserRegistrationRequest userRegistrationRequest) {
     return User.createNew(userRegistrationRequest.firstName(), userRegistrationRequest.lastName(),
-        userRegistrationRequest.email(), userRegistrationRequest.password());
+        userRegistrationRequest.email(), userRegistrationRequest.password(), passwordEncoder);
   }
 
   private User findUserByIdOrThrow(UserId userId) {

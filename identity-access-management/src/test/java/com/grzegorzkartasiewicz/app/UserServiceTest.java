@@ -27,6 +27,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -37,6 +38,8 @@ class UserServiceTest {
   private AuthorizationPort authorizationPort;
   @Mock
   private DomainEventPublisher domainEventPublisher;
+  @Mock
+  private PasswordEncoder passwordEncoder;
   @InjectMocks
   private UserService userService;
 
@@ -61,6 +64,7 @@ class UserServiceTest {
     Token token = new Token("dummy-token");
     when(userRepository.save(any(User.class))).thenReturn(testUser);
     when(authorizationPort.generateToken(any(User.class))).thenReturn(token);
+    when(passwordEncoder.encode("Password123!")).thenReturn("Password123!");
 
     // when
     RegisteredUser registeredUser = userService.signIn(request);
@@ -86,8 +90,10 @@ class UserServiceTest {
   @DisplayName("signIn should throw UserAlreadyExistsException when user already exists")
   void signIn_shouldThrowExceptionWhenUserExists() {
     // given
-    UserRegistrationRequest request = new UserRegistrationRequest("John", "Doe", "john.doe@example.com", "Password123!");
-    when(userRepository.findUserByEmail(new Email(request.email()))).thenReturn(Optional.of(testUser));
+    UserRegistrationRequest request = new UserRegistrationRequest("John", "Doe",
+        "john.doe@example.com", "Password123!");
+    when(userRepository.findUserByEmail(new Email(request.email()))).thenReturn(
+        Optional.of(testUser));
 
     // when & then
     assertThrows(UserAlreadyExistsException.class, () -> userService.signIn(request));
@@ -97,7 +103,8 @@ class UserServiceTest {
   @DisplayName("signIn should throw InvalidCredentialsException for invalid data")
   void signIn_shouldThrowExceptionForInvalidData() {
     // given
-    UserRegistrationRequest request = new UserRegistrationRequest(null, "Doe", "john.doe@example.com", "Password123!");
+    UserRegistrationRequest request = new UserRegistrationRequest(null, "Doe",
+        "john.doe@example.com", "Password123!");
 
     // when & then
     assertThrows(InvalidCredentialsException.class, () -> userService.signIn(request));
@@ -108,11 +115,13 @@ class UserServiceTest {
   @DisplayName("logIn should return logged user when credentials are correct")
   void logIn_shouldReturnLoggedUserWhenCredentialsAreCorrect() {
     // given
-    UserLogInRequest request = new UserLogInRequest(testUser.getEmail(),
+    UserLogInRequest request = new UserLogInRequest(testUser.getEmail().email(),
         testUser.getPassword().password());
     Token token = new Token("dummy-token");
 
-    when(userRepository.findUserByEmail(request.email())).thenReturn(Optional.of(testUser));
+    when(userRepository.findUserByEmail(new Email(request.email()))).thenReturn(
+        Optional.of(testUser));
+    when(passwordEncoder.matches(any(String.class), any(String.class))).thenReturn(true);
     when(authorizationPort.generateToken(testUser)).thenReturn(token);
 
     // when
@@ -130,8 +139,9 @@ class UserServiceTest {
   @DisplayName("logIn should throw InvalidCredentialsException when user not found")
   void logIn_shouldThrowExceptionWhenUserNotFound() {
     // given
-    UserLogInRequest request = new UserLogInRequest(new Email("nonexistent@example.com"), "password");
-    when(userRepository.findUserByEmail(request.email())).thenReturn(Optional.empty());
+    UserLogInRequest request = new UserLogInRequest("nonexistent@example.com",
+        "password");
+    when(userRepository.findUserByEmail(new Email(request.email()))).thenReturn(Optional.empty());
 
     // when & then
     assertThrows(InvalidCredentialsException.class, () -> userService.logIn(request));
@@ -145,9 +155,10 @@ class UserServiceTest {
       testUser.recordFailedLoginAttempt();
     }
 
-    UserLogInRequest request = new UserLogInRequest(testUser.getEmail(),
+    UserLogInRequest request = new UserLogInRequest(testUser.getEmail().email(),
         testUser.getPassword().password());
-    when(userRepository.findUserByEmail(request.email())).thenReturn(Optional.of(testUser));
+    when(userRepository.findUserByEmail(new Email(request.email()))).thenReturn(
+        Optional.of(testUser));
 
     // when & then
     UserBlockedException exception = assertThrows(UserBlockedException.class,
@@ -159,8 +170,9 @@ class UserServiceTest {
   @DisplayName("logIn should increase counter and throw exception when password is incorrect")
   void logIn_shouldIncreaseCounterAndThrowExceptionWhenPasswordIsIncorrect() {
     // given
-    UserLogInRequest request = new UserLogInRequest(testUser.getEmail(), "wrong-password");
-    when(userRepository.findUserByEmail(request.email())).thenReturn(Optional.of(testUser));
+    UserLogInRequest request = new UserLogInRequest(testUser.getEmail().email(), "wrong-password");
+    when(userRepository.findUserByEmail(new Email(request.email()))).thenReturn(
+        Optional.of(testUser));
 
     // when & then
     assertThrows(InvalidCredentialsException.class, () -> userService.logIn(request));
@@ -173,14 +185,16 @@ class UserServiceTest {
   @DisplayName("requestResetPassword should find user by email and publish event")
   void requestResetPassword_shouldFindUserByEmailAndPublishEvent() {
     // given
-    ResetPasswordRequest request = new ResetPasswordRequest(testUser.getEmail(), "newPassword123!");
-    when(userRepository.findUserByEmail(request.email())).thenReturn(Optional.of(testUser));
+    ResetPasswordRequest request = new ResetPasswordRequest(testUser.getEmail().email(),
+        "newPassword123!");
+    when(userRepository.findUserByEmail(new Email(request.email()))).thenReturn(
+        Optional.of(testUser));
 
     // when
     userService.requestResetPassword(request);
 
     // then
-    verify(userRepository).findUserByEmail(request.email());
+    verify(userRepository).findUserByEmail(new Email(request.email()));
     verify(domainEventPublisher).publish(any(ResetPasswordEvent.class));
   }
 
@@ -188,11 +202,13 @@ class UserServiceTest {
   @DisplayName("requestResetPassword should throw InvalidCredentialsException when user not found")
   void requestResetPassword_shouldThrowExceptionWhenUserNotFound() {
     // given
-    ResetPasswordRequest request = new ResetPasswordRequest(new Email("nonexistent@example.com"), "newPassword123!");
-    when(userRepository.findUserByEmail(request.email())).thenReturn(Optional.empty());
+    ResetPasswordRequest request = new ResetPasswordRequest("nonexistent@example.com",
+        "newPassword123!");
+    when(userRepository.findUserByEmail(new Email(request.email()))).thenReturn(Optional.empty());
 
     // when & then
-    assertThrows(InvalidCredentialsException.class, () -> userService.requestResetPassword(request));
+    assertThrows(InvalidCredentialsException.class,
+        () -> userService.requestResetPassword(request));
   }
 
 
@@ -203,6 +219,7 @@ class UserServiceTest {
     UserId userId = testUser.getId();
     String newPassword = "newValidPassword123!";
     when(userRepository.findUserById(userId)).thenReturn(Optional.of(testUser));
+    when(passwordEncoder.encode(newPassword)).thenReturn(newPassword);
 
     // when
     userService.resetPassword(userId, newPassword);
@@ -222,7 +239,8 @@ class UserServiceTest {
     when(userRepository.findUserById(userId)).thenReturn(Optional.empty());
 
     // when & then
-    assertThrows(InvalidCredentialsException.class, () -> userService.resetPassword(userId, newPassword));
+    assertThrows(InvalidCredentialsException.class,
+        () -> userService.resetPassword(userId, newPassword));
   }
 
 
@@ -266,6 +284,7 @@ class UserServiceTest {
     when(userRepository.findUserById(userId)).thenReturn(Optional.empty());
 
     // when & then
-    assertThrows(InvalidCredentialsException.class, () -> userService.verifyUser(userId, Verification.VERIFIED));
+    assertThrows(InvalidCredentialsException.class,
+        () -> userService.verifyUser(userId, Verification.VERIFIED));
   }
 }

@@ -2,6 +2,7 @@ package com.grzegorzkartasiewicz.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Getter
 @AllArgsConstructor
@@ -21,24 +22,28 @@ public class User {
     this.name = name;
     email.validate();
     this.email = email;
-    password.validate();
     this.password = password;
     this.verification = Verification.UNVERIFIED;
     this.invalidLogInCounter = new InvalidLogInCounter(0);
     this.blocked = Blocked.NOT_BLOCKED;
   }
 
-  public static User createNew(String firstName, String surname, String email, String password) {
+  public static User createNew(String firstName, String surname, String email, String rawPassword,
+      PasswordEncoder passwordEncoder) {
+    Password.validate(rawPassword);
+    String encodedPassword = passwordEncoder.encode(rawPassword);
     return new User(new Name(firstName, surname), new Email(
-        email), new Password(password));
+        email), new Password(encodedPassword));
   }
 
   public void verify() {
     this.verification = Verification.VERIFIED;
   }
 
-  public void verifyPassword(String password) {
-    this.password.isEqual(password);
+  public void verifyPassword(String rawPassword, PasswordEncoder passwordEncoder) {
+    if (!passwordEncoder.matches(rawPassword, this.password.password())) {
+      throw new PasswordDoesNotMatchException("Passwords do not match");
+    }
   }
 
   public void recordFailedLoginAttempt() {
@@ -57,9 +62,9 @@ public class User {
     return this.blocked == Blocked.BLOCKED;
   }
 
-  public void resetPassword(String password) {
-    Password newPassword = new Password(password);
-    newPassword.validate();
-    this.password = newPassword;
+  public void resetPassword(String rawNewPassword, PasswordEncoder passwordEncoder) {
+    Password.validate(rawNewPassword);
+    rawNewPassword = passwordEncoder.encode(rawNewPassword);
+    this.password = new Password(rawNewPassword);
   }
 }
