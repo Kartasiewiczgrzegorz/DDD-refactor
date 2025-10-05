@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 
 @RequiredArgsConstructor
 @Repository
-public class UserRepositoryImpl implements UserRepository {
+class UserRepositoryImpl implements UserRepository {
 
   private final SqlUserRepository repository;
 

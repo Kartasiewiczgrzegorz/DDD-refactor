@@ -9,18 +9,18 @@ import org.springframework.stereotype.Component;
 
 @RequiredArgsConstructor
 @Component
-public class UserEventListener {
+class UserEventListener {
 
   private final UserService userService;
 
   @EventListener
-  public void verifyUser(UserEmailVerificationEvent userEmailVerificationEvent) {
+  void verifyUser(UserEmailVerificationEvent userEmailVerificationEvent) {
     userService.verifyUser(userEmailVerificationEvent.verifiedUserId(),
         userEmailVerificationEvent.verification());
   }
 
   @EventListener
-  public void resetPassword(ResetPasswordEvent resetPasswordEvent) {
+  void resetPassword(ResetPasswordEvent resetPasswordEvent) {
     userService.resetPassword(resetPasswordEvent.userId(), resetPasswordEvent.newPassword());
   }
 

@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "users")
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserEntity {
+class UserEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.UUID)
@@ -43,12 +43,12 @@ public class UserEntity {
   @Enumerated(EnumType.STRING)
   private Blocked blocked;
 
-  public User toDomain() {
+  User toDomain() {
     return new User(new UserId(id), name, email, password, verification, invalidLogInCounter,
         blocked);
   }
 
-  public static UserEntity fromDomain(User user) {
+  static UserEntity fromDomain(User user) {
     return new UserEntity(user.getId() == null ? null : user.getId().id(), user.getName(),
         user.getEmail(), user.getPassword(),
         user.getVerification(), user.getInvalidLogInCounter(), user.getBlocked());
