@@ -3,9 +3,13 @@ package com.grzegorzkartasiewicz.domain;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.grzegorzkartasiewicz.domain.vo.Blocked;
+import com.grzegorzkartasiewicz.domain.vo.Email;
+import com.grzegorzkartasiewicz.domain.vo.Name;
+import com.grzegorzkartasiewicz.domain.vo.Password;
+import com.grzegorzkartasiewicz.domain.vo.Verification;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 class UserTest {
 

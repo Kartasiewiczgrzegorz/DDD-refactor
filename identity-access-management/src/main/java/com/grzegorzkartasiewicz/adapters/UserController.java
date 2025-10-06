@@ -37,7 +37,7 @@ class UserController {
       })
   @PostMapping
   ResponseEntity<RegisteredUser> registerUser(@RequestBody UserRegistrationRequest signInRequest) {
-    RegisteredUser response = userService.signIn(signInRequest);
+    RegisteredUser response = userService.signUp(signInRequest);
     return ResponseEntity.created(URI.create("/users/" + response.id())).body(response);
   }
 

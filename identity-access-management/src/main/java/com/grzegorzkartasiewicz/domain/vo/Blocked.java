@@ -1,4 +1,4 @@
-package com.grzegorzkartasiewicz.domain;
+package com.grzegorzkartasiewicz.domain.vo;
 
 public enum Blocked {
   BLOCKED,

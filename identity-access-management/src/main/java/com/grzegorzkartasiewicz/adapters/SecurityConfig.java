@@ -1,4 +1,4 @@
-package com.grzegorzkartasiewicz.adapters; // Upewnij się, że pakiet jest poprawny
+package com.grzegorzkartasiewicz.adapters;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

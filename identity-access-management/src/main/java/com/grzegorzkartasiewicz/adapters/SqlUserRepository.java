@@ -1,6 +1,6 @@
 package com.grzegorzkartasiewicz.adapters;
 
-import com.grzegorzkartasiewicz.domain.Email;
+import com.grzegorzkartasiewicz.domain.vo.Email;
 import java.util.UUID;
 import org.springframework.data.repository.Repository;
 

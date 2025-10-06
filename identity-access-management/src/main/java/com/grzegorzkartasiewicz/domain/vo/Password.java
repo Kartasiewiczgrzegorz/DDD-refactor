@@ -1,4 +1,6 @@
-package com.grzegorzkartasiewicz.domain;
+package com.grzegorzkartasiewicz.domain.vo;
+
+import com.grzegorzkartasiewicz.domain.ValidationException;
 
 public record Password(String password) {
 

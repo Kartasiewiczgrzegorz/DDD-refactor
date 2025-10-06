@@ -1,5 +1,12 @@
 package com.grzegorzkartasiewicz.domain;
 
+import com.grzegorzkartasiewicz.domain.vo.Blocked;
+import com.grzegorzkartasiewicz.domain.vo.Email;
+import com.grzegorzkartasiewicz.domain.vo.InvalidLogInCounter;
+import com.grzegorzkartasiewicz.domain.vo.Name;
+import com.grzegorzkartasiewicz.domain.vo.Password;
+import com.grzegorzkartasiewicz.domain.vo.UserId;
+import com.grzegorzkartasiewicz.domain.vo.Verification;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.security.crypto.password.PasswordEncoder;

@@ -1,4 +1,4 @@
-package com.grzegorzkartasiewicz.domain;
+package com.grzegorzkartasiewicz.domain.vo;
 
 import jakarta.persistence.Embeddable;
 import java.io.Serializable;

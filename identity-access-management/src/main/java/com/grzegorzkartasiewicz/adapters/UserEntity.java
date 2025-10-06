@@ -1,15 +1,14 @@
 package com.grzegorzkartasiewicz.adapters;
 
-import com.grzegorzkartasiewicz.domain.Blocked;
-import com.grzegorzkartasiewicz.domain.Email;
-import com.grzegorzkartasiewicz.domain.InvalidLogInCounter;
-import com.grzegorzkartasiewicz.domain.Name;
-import com.grzegorzkartasiewicz.domain.Password;
+import com.grzegorzkartasiewicz.domain.vo.Blocked;
+import com.grzegorzkartasiewicz.domain.vo.Email;
+import com.grzegorzkartasiewicz.domain.vo.InvalidLogInCounter;
+import com.grzegorzkartasiewicz.domain.vo.Name;
+import com.grzegorzkartasiewicz.domain.vo.Password;
 import com.grzegorzkartasiewicz.domain.User;
-import com.grzegorzkartasiewicz.domain.UserId;
-import com.grzegorzkartasiewicz.domain.Verification;
+import com.grzegorzkartasiewicz.domain.vo.UserId;
+import com.grzegorzkartasiewicz.domain.vo.Verification;
 import jakarta.persistence.Convert;
-import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;

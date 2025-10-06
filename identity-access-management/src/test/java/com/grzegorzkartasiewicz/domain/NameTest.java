@@ -2,7 +2,7 @@ package com.grzegorzkartasiewicz.domain;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.grzegorzkartasiewicz.domain.Name;
+import com.grzegorzkartasiewicz.domain.vo.Name;
 import org.junit.jupiter.api.Test;
 
 class NameTest {

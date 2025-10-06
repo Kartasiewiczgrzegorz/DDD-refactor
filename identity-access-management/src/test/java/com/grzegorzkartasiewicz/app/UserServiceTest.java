@@ -7,16 +7,16 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.grzegorzkartasiewicz.domain.Blocked;
+import com.grzegorzkartasiewicz.domain.vo.Blocked;
 import com.grzegorzkartasiewicz.domain.DomainEventPublisher;
-import com.grzegorzkartasiewicz.domain.Email;
-import com.grzegorzkartasiewicz.domain.InvalidLogInCounter;
-import com.grzegorzkartasiewicz.domain.Name;
-import com.grzegorzkartasiewicz.domain.Password;
+import com.grzegorzkartasiewicz.domain.vo.Email;
+import com.grzegorzkartasiewicz.domain.vo.InvalidLogInCounter;
+import com.grzegorzkartasiewicz.domain.vo.Name;
+import com.grzegorzkartasiewicz.domain.vo.Password;
 import com.grzegorzkartasiewicz.domain.User;
-import com.grzegorzkartasiewicz.domain.UserId;
+import com.grzegorzkartasiewicz.domain.vo.UserId;
 import com.grzegorzkartasiewicz.domain.UserRepository;
-import com.grzegorzkartasiewicz.domain.Verification;
+import com.grzegorzkartasiewicz.domain.vo.Verification;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,7 +57,7 @@ class UserServiceTest {
 
   @Test
   @DisplayName("signIn should save user and return registered user with token")
-  void signIn_shouldSaveUserAndReturnRegisteredUserWithToken() {
+  void signUp_shouldSaveUserAndReturnRegisteredUserWithToken() {
     // given
     UserRegistrationRequest request = new UserRegistrationRequest("John", "Doe",
         "john.doe@example.com", "Password123!");
@@ -67,7 +67,7 @@ class UserServiceTest {
     when(passwordEncoder.encode("Password123!")).thenReturn("Password123!");
 
     // when
-    RegisteredUser registeredUser = userService.signIn(request);
+    RegisteredUser registeredUser = userService.signUp(request);
 
     // then
     ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
@@ -88,7 +88,7 @@ class UserServiceTest {
 
   @Test
   @DisplayName("signIn should throw UserAlreadyExistsException when user already exists")
-  void signIn_shouldThrowExceptionWhenUserExists() {
+  void signUp_shouldThrowExceptionWhenUserExists() {
     // given
     UserRegistrationRequest request = new UserRegistrationRequest("John", "Doe",
         "john.doe@example.com", "Password123!");
@@ -96,18 +96,18 @@ class UserServiceTest {
         Optional.of(testUser));
 
     // when & then
-    assertThrows(UserAlreadyExistsException.class, () -> userService.signIn(request));
+    assertThrows(UserAlreadyExistsException.class, () -> userService.signUp(request));
   }
 
   @Test
   @DisplayName("signIn should throw InvalidCredentialsException for invalid data")
-  void signIn_shouldThrowExceptionForInvalidData() {
+  void signUp_shouldThrowExceptionForInvalidData() {
     // given
     UserRegistrationRequest request = new UserRegistrationRequest(null, "Doe",
         "john.doe@example.com", "Password123!");
 
     // when & then
-    assertThrows(InvalidCredentialsException.class, () -> userService.signIn(request));
+    assertThrows(InvalidCredentialsException.class, () -> userService.signUp(request));
   }
 
 

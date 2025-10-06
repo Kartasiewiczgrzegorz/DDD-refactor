@@ -1,5 +1,7 @@
 package com.grzegorzkartasiewicz.domain;
 
+import com.grzegorzkartasiewicz.domain.vo.Email;
+import com.grzegorzkartasiewicz.domain.vo.UserId;
 import java.util.Optional;
 
 public interface UserRepository {

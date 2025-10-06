@@ -1,4 +1,4 @@
-package com.grzegorzkartasiewicz.adapters; // Upewnij się, że pakiet jest poprawny
+package com.grzegorzkartasiewicz.adapters;
 
 import com.grzegorzkartasiewicz.app.InvalidCredentialsException;
 import com.grzegorzkartasiewicz.app.UserAlreadyExistsException;

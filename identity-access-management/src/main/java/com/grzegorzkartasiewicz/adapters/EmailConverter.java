@@ -1,10 +1,10 @@
 package com.grzegorzkartasiewicz.adapters;
 
-import com.grzegorzkartasiewicz.domain.Email;
+import com.grzegorzkartasiewicz.domain.vo.Email;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
-@Converter(autoApply = false)
+@Converter
 class EmailConverter implements AttributeConverter<Email, String> {
 
   @Override

@@ -1,8 +1,8 @@
 package com.grzegorzkartasiewicz.adapters;
 
-import com.grzegorzkartasiewicz.domain.Email;
+import com.grzegorzkartasiewicz.domain.vo.Email;
 import com.grzegorzkartasiewicz.domain.User;
-import com.grzegorzkartasiewicz.domain.UserId;
+import com.grzegorzkartasiewicz.domain.vo.UserId;
 import com.grzegorzkartasiewicz.domain.UserRepository;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;

@@ -1,10 +1,10 @@
 package com.grzegorzkartasiewicz.adapters;
 
-import com.grzegorzkartasiewicz.domain.Name;
+import com.grzegorzkartasiewicz.domain.vo.Name;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
-@Converter(autoApply = false)
+@Converter
 class NameConverter implements AttributeConverter<Name, String> {
 
   @Override

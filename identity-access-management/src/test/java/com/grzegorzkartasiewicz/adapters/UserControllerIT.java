@@ -11,7 +11,6 @@ import com.grzegorzkartasiewicz.app.ResetPasswordRequest;
 import com.grzegorzkartasiewicz.app.UserLogInRequest;
 import com.grzegorzkartasiewicz.app.UserRegistrationRequest;
 import com.grzegorzkartasiewicz.app.UserService;
-import com.grzegorzkartasiewicz.domain.Email;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,7 +59,7 @@ class UserControllerIT {
     // given
     UserRegistrationRequest existingUserRequest = new UserRegistrationRequest("Existing", "User",
         "existing.user@example.com", "Password123!");
-    userService.signIn(existingUserRequest);
+    userService.signUp(existingUserRequest);
 
     UserRegistrationRequest newUserRequest = new UserRegistrationRequest("New", "User",
         "existing.user@example.com", "Password456!");
@@ -92,7 +91,7 @@ class UserControllerIT {
     // given: najpierw zarejestruj użytkownika
     UserRegistrationRequest registrationRequest = new UserRegistrationRequest("Peter", "Jones",
         "peter.jones@example.com", "Password123!");
-    userService.signIn(registrationRequest);
+    userService.signUp(registrationRequest);
 
     // teraz przygotuj żądanie logowania
     UserLogInRequest loginRequest = new UserLogInRequest("peter.jones@example.com",
@@ -129,7 +128,7 @@ class UserControllerIT {
     // given: najpierw zarejestruj użytkownika
     UserRegistrationRequest registrationRequest = new UserRegistrationRequest("Alice", "Smith",
         "alice.smith@example.com", "Password123!");
-    userService.signIn(registrationRequest);
+    userService.signUp(registrationRequest);
 
     // teraz przygotuj żądanie logowania z błędnym hasłem
     UserLogInRequest loginRequest = new UserLogInRequest("alice.smith@example.com",
@@ -151,7 +150,7 @@ class UserControllerIT {
     String wrongPassword = "WrongPassword123!";
     UserRegistrationRequest registrationRequest = new UserRegistrationRequest("Blocked", "User",
         email, correctPassword);
-    userService.signIn(registrationRequest);
+    userService.signUp(registrationRequest);
 
     UserLogInRequest wrongPasswordRequest = new UserLogInRequest(email, wrongPassword);
     UserLogInRequest correctPasswordRequest = new UserLogInRequest(email,
@@ -182,7 +181,7 @@ class UserControllerIT {
     String newPassword = "NewPassword456!";
     UserRegistrationRequest registrationRequest = new UserRegistrationRequest("Reset", "Password",
         email, oldPassword);
-    userService.signIn(registrationRequest);
+    userService.signUp(registrationRequest);
 
     // when
     ResetPasswordRequest resetRequest = new ResetPasswordRequest(email, newPassword);

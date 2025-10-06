@@ -1,10 +1,10 @@
 package com.grzegorzkartasiewicz.adapters;
 
-import com.grzegorzkartasiewicz.domain.Password;
+import com.grzegorzkartasiewicz.domain.vo.Password;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
-@Converter(autoApply = false)
+@Converter
 class PasswordConverter implements AttributeConverter<Password, String> {
 
   @Override

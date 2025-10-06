@@ -1,13 +1,13 @@
 package com.grzegorzkartasiewicz.app;
 
 import com.grzegorzkartasiewicz.domain.DomainEventPublisher;
-import com.grzegorzkartasiewicz.domain.Email;
+import com.grzegorzkartasiewicz.domain.vo.Email;
 import com.grzegorzkartasiewicz.domain.PasswordDoesNotMatchException;
 import com.grzegorzkartasiewicz.domain.User;
-import com.grzegorzkartasiewicz.domain.UserId;
+import com.grzegorzkartasiewicz.domain.vo.UserId;
 import com.grzegorzkartasiewicz.domain.UserRepository;
 import com.grzegorzkartasiewicz.domain.ValidationException;
-import com.grzegorzkartasiewicz.domain.Verification;
+import com.grzegorzkartasiewicz.domain.vo.Verification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -31,7 +31,7 @@ public class UserService {
    * @throws UserAlreadyExistsException if a user with the given email already exists.
    * @throws ValidationException if the provided data (e.g., password) is invalid.
    */
-  public RegisteredUser signIn(UserRegistrationRequest userRegistrationRequest) {
+  public RegisteredUser signUp(UserRegistrationRequest userRegistrationRequest) {
     validateIfUserExists(userRegistrationRequest.email());
     User signedUser;
     signedUser = createUserOrThrowIfValidationFails(userRegistrationRequest);
