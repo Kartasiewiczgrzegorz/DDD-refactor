@@ -4,19 +4,18 @@ import com.grzegorzkartasiewicz.domain.vo.CommentId;
 import com.grzegorzkartasiewicz.domain.vo.Description;
 import com.grzegorzkartasiewicz.domain.vo.LikeCounter;
 import com.grzegorzkartasiewicz.domain.vo.UserId;
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class Comment {
+class Comment {
   CommentId id;
   Description description;
   UserId authorId;
   LikeCounter likeCounter;
 
-  public Comment(Description description, UserId authorId) {
+  Comment(Description description, UserId authorId) {
     this.id = new CommentId(null);
     description.validate();
     this.description = description;
@@ -24,22 +23,19 @@ public class Comment {
     this.likeCounter = new LikeCounter(0);
   }
 
-  public static Comment createNew(String text, UUID authorId) {
-    return new Comment(new Description(text), new UserId(
-        authorId));
+  static Comment createNew(Description text, UserId authorId) {
+    return new Comment(text, authorId);
   }
 
-  public void edit(String newText) {
-    Description newDescription = new Description(newText);
-    newDescription.validate();
-    this.description = newDescription;
+  void edit(Description newText) {
+    this.description = newText;
   }
 
-  public void increaseLikes() {
+  void increaseLikes() {
     // pomyśleć jak zapewnić spójność atomową licznika
     this.likeCounter = this.likeCounter.increase();
   }
-  public void decreaseLikes() {
+  void decreaseLikes() {
     this.likeCounter = this.likeCounter.decrease();
   }
 }

@@ -4,6 +4,8 @@ import com.grzegorzkartasiewicz.domain.DomainEventPublisher;
 import com.grzegorzkartasiewicz.domain.vo.Email;
 import com.grzegorzkartasiewicz.domain.PasswordDoesNotMatchException;
 import com.grzegorzkartasiewicz.domain.User;
+import com.grzegorzkartasiewicz.domain.vo.Name;
+import com.grzegorzkartasiewicz.domain.vo.RawPassword;
 import com.grzegorzkartasiewicz.domain.vo.UserId;
 import com.grzegorzkartasiewicz.domain.UserRepository;
 import com.grzegorzkartasiewicz.domain.ValidationException;
@@ -12,8 +14,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
- * Application service responsible for handling user-related use cases.
- * It acts as an orchestrator, coordinating logic between the domain and adapters.
+ * Application service responsible for handling user-related use cases. It acts as an orchestrator,
+ * coordinating logic between the domain and adapters.
  */
 @RequiredArgsConstructor
 public class UserService {
@@ -29,7 +31,7 @@ public class UserService {
    * @param userRegistrationRequest The registration data from the user.
    * @return A {@link RegisteredUser} object containing the new user's data and a JWT.
    * @throws UserAlreadyExistsException if a user with the given email already exists.
-   * @throws ValidationException if the provided data (e.g., password) is invalid.
+   * @throws ValidationException        if the provided data (e.g., password) is invalid.
    */
   public RegisteredUser signUp(UserRegistrationRequest userRegistrationRequest) {
     validateIfUserExists(userRegistrationRequest.email());
@@ -47,7 +49,7 @@ public class UserService {
    * @param userLogInRequest The user's login data.
    * @return A {@link LoggedUser} object containing the logged-in user's data and a JWT.
    * @throws InvalidCredentialsException if the email or password is incorrect.
-   * @throws UserBlockedException if the user account is blocked.
+   * @throws UserBlockedException        if the user account is blocked.
    */
   public LoggedUser logIn(UserLogInRequest userLogInRequest) {
     User user = findUserByEmailOrThrow(userLogInRequest.email());
@@ -59,9 +61,9 @@ public class UserService {
   }
 
   /**
-   * Initiates the password reset process for a user.
-   * This method finds the user by email and publishes a {@link ResetPasswordEvent}.
-   * The actual sending of the email is handled by an event listener.
+   * Initiates the password reset process for a user. This method finds the user by email and
+   * publishes a {@link ResetPasswordEvent}. The actual sending of the email is handled by an event
+   * listener.
    *
    * @param resetPasswordRequest The request object containing the user's email.
    * @throws InvalidCredentialsException if a user with the given email is not found.
@@ -76,17 +78,19 @@ public class UserService {
   }
 
   /**
-   * Resets the password for a user identified by their UserId.
-   * This method should be called after a user has confirmed the reset request (e.g., by clicking a link in an email).
+   * Resets the password for a user identified by their UserId. This method should be called after a
+   * user has confirmed the reset request (e.g., by clicking a link in an email).
    *
-   * @param userId The unique identifier of the user.
+   * @param userId   The unique identifier of the user.
    * @param password The new, raw password to be set and hashed.
    * @throws InvalidCredentialsException if a user with the given ID is not found.
-   * @throws ValidationException if the new password does not meet the required validation criteria.
+   * @throws ValidationException         if the new password does not meet the required validation
+   *                                     criteria.
    */
   public void resetPassword(UserId userId, String password) {
     User user = findUserByIdOrThrow(userId);
-    user.resetPassword(password, passwordEncoder);
+    RawPassword.validate(password);
+    user.resetPassword(new RawPassword(password), passwordEncoder);
     userRepository.save(user);
   }
 
@@ -94,7 +98,7 @@ public class UserService {
    * Verifies a user's account or handles an unverified account.
    *
    * @param verifiedUserId The ID of the user to verify.
-   * @param verification The desired verification status.
+   * @param verification   The desired verification status.
    * @throws InvalidCredentialsException if the user with the given ID is not found.
    */
   public void verifyUser(UserId verifiedUserId, Verification verification) {
@@ -107,7 +111,8 @@ public class UserService {
     }
   }
 
-  private void validateCredentialsAndHandleFailedAttempt(UserLogInRequest userLogInRequest, User user) {
+  private void validateCredentialsAndHandleFailedAttempt(UserLogInRequest userLogInRequest,
+      User user) {
     try {
       user.verifyPassword(userLogInRequest.password(), passwordEncoder);
     } catch (PasswordDoesNotMatchException e) {
@@ -126,6 +131,7 @@ public class UserService {
   private User createUserOrThrowIfValidationFails(UserRegistrationRequest userRegistrationRequest) {
     User signedUser;
     try {
+      RawPassword.validate(userRegistrationRequest.password());
       signedUser = mapRequestToUser(userRegistrationRequest);
       signedUser = userRepository.save(signedUser);
     } catch (ValidationException e) {
@@ -141,8 +147,11 @@ public class UserService {
   }
 
   private User mapRequestToUser(UserRegistrationRequest userRegistrationRequest) {
-    return User.createNew(userRegistrationRequest.firstName(), userRegistrationRequest.lastName(),
-        userRegistrationRequest.email(), userRegistrationRequest.password(), passwordEncoder);
+    return User.createNew(
+        new Name(userRegistrationRequest.firstName(), userRegistrationRequest.lastName()),
+        new Email(
+            userRegistrationRequest.email()), new RawPassword(userRegistrationRequest.password()),
+        passwordEncoder);
   }
 
   private User findUserByIdOrThrow(UserId userId) {

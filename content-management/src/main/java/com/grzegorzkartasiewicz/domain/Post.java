@@ -22,7 +22,7 @@ public class Post {
   List<Comment> comments;
 
 
-  public Post(Description description, UserId authorId) {
+  Post(Description description, UserId authorId) {
     this.id = new PostId(null);
     description.validate();
     this.description = description;
@@ -31,15 +31,12 @@ public class Post {
     this.comments = new ArrayList<>();
   }
 
-  public static Post createNew(String text, UUID authorId) {
-    return new Post(new Description(text), new UserId(
-        authorId));
+  public static Post createNew(Description text, UserId authorId) {
+    return new Post(text, authorId);
   }
 
-  public void edit(String newText) {
-    Description newDescription = new Description(newText);
-    newDescription.validate();
-    this.description = newDescription;
+  public void edit(Description newText) {
+    this.description = newText;
   }
 
   public void increaseLikes() {
@@ -51,11 +48,11 @@ public class Post {
     this.likeCounter = this.likeCounter.decrease();
   }
 
-  public void addComment(String text, UUID authorId) {
+  public void addComment(Description text, UserId authorId) {
     this.comments.add(Comment.createNew(text, authorId));
   }
 
-  public void editComment(CommentId commentId, String newText) {
+  public void editComment(CommentId commentId, Description newText) {
     this.comments.stream().filter(comment -> comment.getId().equals(commentId)).findFirst()
         .ifPresent(comment -> {
           comment.edit(newText);

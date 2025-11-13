@@ -5,6 +5,7 @@ import com.grzegorzkartasiewicz.domain.vo.Email;
 import com.grzegorzkartasiewicz.domain.vo.InvalidLogInCounter;
 import com.grzegorzkartasiewicz.domain.vo.Name;
 import com.grzegorzkartasiewicz.domain.vo.Password;
+import com.grzegorzkartasiewicz.domain.vo.RawPassword;
 import com.grzegorzkartasiewicz.domain.vo.UserId;
 import com.grzegorzkartasiewicz.domain.vo.Verification;
 import lombok.AllArgsConstructor;
@@ -35,12 +36,10 @@ public class User {
     this.blocked = Blocked.NOT_BLOCKED;
   }
 
-  public static User createNew(String firstName, String surname, String email, String rawPassword,
+  public static User createNew(Name name, Email email, RawPassword rawPassword,
       PasswordEncoder passwordEncoder) {
-    Password.validate(rawPassword);
-    String encodedPassword = passwordEncoder.encode(rawPassword);
-    return new User(new Name(firstName, surname), new Email(
-        email), new Password(encodedPassword));
+    String encodedPassword = passwordEncoder.encode(rawPassword.rawPassword());
+    return new User(name, email, new Password(encodedPassword));
   }
 
   public void verify() {
@@ -69,9 +68,8 @@ public class User {
     return this.blocked == Blocked.BLOCKED;
   }
 
-  public void resetPassword(String rawNewPassword, PasswordEncoder passwordEncoder) {
-    Password.validate(rawNewPassword);
-    rawNewPassword = passwordEncoder.encode(rawNewPassword);
-    this.password = new Password(rawNewPassword);
+  public void resetPassword(RawPassword rawNewPassword, PasswordEncoder passwordEncoder) {
+    String encodedPassword = passwordEncoder.encode(rawNewPassword.rawPassword());
+    this.password = new Password(encodedPassword);
   }
 }
