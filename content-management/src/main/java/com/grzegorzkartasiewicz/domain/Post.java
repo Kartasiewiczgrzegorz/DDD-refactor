@@ -15,16 +15,15 @@ import lombok.Getter;
 @AllArgsConstructor
 public class Post {
 
-  PostId id;
-  Description description;
-  UserId authorId;
-  LikeCounter likeCounter;
-  List<Comment> comments;
+  private PostId id;
+  private Description description;
+  private UserId authorId;
+  private LikeCounter likeCounter;
+  private List<Comment> comments;
 
 
   Post(Description description, UserId authorId) {
     this.id = new PostId(null);
-    description.validate();
     this.description = description;
     this.authorId = authorId;
     this.likeCounter = new LikeCounter(0);
@@ -45,6 +44,9 @@ public class Post {
   }
 
   public void decreaseLikes() {
+    if (this.likeCounter.likeCount() == 0) {
+      return;
+    }
     this.likeCounter = this.likeCounter.decrease();
   }
 
@@ -54,9 +56,7 @@ public class Post {
 
   public void editComment(CommentId commentId, Description newText) {
     this.comments.stream().filter(comment -> comment.getId().equals(commentId)).findFirst()
-        .ifPresent(comment -> {
-          comment.edit(newText);
-        });
+        .ifPresent(comment -> comment.edit(newText));
   }
 
   public void removeComment(CommentId commentId) {

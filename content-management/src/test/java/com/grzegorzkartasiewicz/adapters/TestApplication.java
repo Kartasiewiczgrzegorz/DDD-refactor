@@ -1,4 +1,4 @@
-package grzegorzkartasiewicz.adapters;
+package com.grzegorzkartasiewicz.adapters;
 
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 

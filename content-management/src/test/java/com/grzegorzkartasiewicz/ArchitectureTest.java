@@ -1,4 +1,4 @@
-package grzegorzkartasiewicz;
+package com.grzegorzkartasiewicz;
 
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 
