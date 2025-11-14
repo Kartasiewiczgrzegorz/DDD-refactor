@@ -3,7 +3,7 @@ package com.grzegorzkartasiewicz.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.grzegorzkartasiewicz.domain.vo.Description;
-import com.grzegorzkartasiewicz.domain.vo.UserId;
+import com.grzegorzkartasiewicz.domain.vo.AuthorId;
 import java.util.UUID;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -130,17 +130,17 @@ class PostTest {
 
 
   private static @NotNull Post getTestPost() {
-    return new Post(new Description("text"), new UserId(UUID.randomUUID()));
+    return new Post(new Description("text"), new AuthorId(UUID.randomUUID()));
   }
 
   private static @NotNull Post getTestPostWithComments() {
-    Post post = new Post(new Description("text"), new UserId(UUID.randomUUID()));
+    Post post = new Post(new Description("text"), new AuthorId(UUID.randomUUID()));
     Comment testComment = getTestComment();
     post.addComment(testComment.getDescription(), testComment.getAuthorId());
     return post;
   }
 
   private static @NotNull Comment getTestComment() {
-    return new Comment(new Description("commentText"), new UserId(UUID.randomUUID()));
+    return new Comment(new Description("commentText"), new AuthorId(UUID.randomUUID()));
   }
 }

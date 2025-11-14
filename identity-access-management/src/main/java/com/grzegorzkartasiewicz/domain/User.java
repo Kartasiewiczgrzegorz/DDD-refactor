@@ -26,9 +26,7 @@ public class User {
 
   User(Name name, Email email, Password password) {
     this.id = new UserId(null);
-    name.validate();
     this.name = name;
-    email.validate();
     this.email = email;
     this.password = password;
     this.verification = Verification.UNVERIFIED;

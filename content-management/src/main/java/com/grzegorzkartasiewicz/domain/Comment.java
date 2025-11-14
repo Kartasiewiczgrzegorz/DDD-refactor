@@ -3,7 +3,7 @@ package com.grzegorzkartasiewicz.domain;
 import com.grzegorzkartasiewicz.domain.vo.CommentId;
 import com.grzegorzkartasiewicz.domain.vo.Description;
 import com.grzegorzkartasiewicz.domain.vo.LikeCounter;
-import com.grzegorzkartasiewicz.domain.vo.UserId;
+import com.grzegorzkartasiewicz.domain.vo.AuthorId;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -12,17 +12,17 @@ import lombok.Getter;
 class Comment {
   private CommentId id;
   private Description description;
-  private UserId authorId;
+  private AuthorId authorId;
   private LikeCounter likeCounter;
 
-  Comment(Description description, UserId authorId) {
+  Comment(Description description, AuthorId authorId) {
     this.id = new CommentId(null);
     this.description = description;
     this.authorId = authorId;
     this.likeCounter = new LikeCounter(0);
   }
 
-  static Comment createNew(Description text, UserId authorId) {
+  static Comment createNew(Description text, AuthorId authorId) {
     return new Comment(text, authorId);
   }
 

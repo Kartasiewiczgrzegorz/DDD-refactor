@@ -147,10 +147,14 @@ public class UserService {
   }
 
   private User mapRequestToUser(UserRegistrationRequest userRegistrationRequest) {
+    Name name = new Name(userRegistrationRequest.firstName(), userRegistrationRequest.lastName());
+    name.validate();
+    Email email = new Email(
+        userRegistrationRequest.email());
+    email.validate();
     return User.createNew(
-        new Name(userRegistrationRequest.firstName(), userRegistrationRequest.lastName()),
-        new Email(
-            userRegistrationRequest.email()), new RawPassword(userRegistrationRequest.password()),
+        name,
+        email, new RawPassword(userRegistrationRequest.password()),
         passwordEncoder);
   }
 

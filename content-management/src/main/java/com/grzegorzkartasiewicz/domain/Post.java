@@ -4,10 +4,9 @@ import com.grzegorzkartasiewicz.domain.vo.CommentId;
 import com.grzegorzkartasiewicz.domain.vo.Description;
 import com.grzegorzkartasiewicz.domain.vo.LikeCounter;
 import com.grzegorzkartasiewicz.domain.vo.PostId;
-import com.grzegorzkartasiewicz.domain.vo.UserId;
+import com.grzegorzkartasiewicz.domain.vo.AuthorId;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -17,12 +16,12 @@ public class Post {
 
   private PostId id;
   private Description description;
-  private UserId authorId;
+  private AuthorId authorId;
   private LikeCounter likeCounter;
   private List<Comment> comments;
 
 
-  Post(Description description, UserId authorId) {
+  Post(Description description, AuthorId authorId) {
     this.id = new PostId(null);
     this.description = description;
     this.authorId = authorId;
@@ -30,7 +29,7 @@ public class Post {
     this.comments = new ArrayList<>();
   }
 
-  public static Post createNew(Description text, UserId authorId) {
+  public static Post createNew(Description text, AuthorId authorId) {
     return new Post(text, authorId);
   }
 
@@ -50,7 +49,7 @@ public class Post {
     this.likeCounter = this.likeCounter.decrease();
   }
 
-  public void addComment(Description text, UserId authorId) {
+  public void addComment(Description text, AuthorId authorId) {
     this.comments.add(Comment.createNew(text, authorId));
   }
 
