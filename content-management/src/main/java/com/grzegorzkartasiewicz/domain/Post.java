@@ -33,7 +33,8 @@ public class Post {
     return new Post(text, authorId);
   }
 
-  public void edit(Description newText) {
+  public void edit(Description newText, AuthorId authorId) {
+    validateIfAuthorIsTheSame(this.authorId, authorId);
     this.description = newText;
   }
 
@@ -53,12 +54,24 @@ public class Post {
     this.comments.add(Comment.createNew(text, authorId));
   }
 
-  public void editComment(CommentId commentId, Description newText) {
+  public void editComment(CommentId commentId, Description newText, AuthorId authorId) {
     this.comments.stream().filter(comment -> comment.getId().equals(commentId)).findFirst()
-        .ifPresent(comment -> comment.edit(newText));
+        .ifPresentOrElse(comment -> {
+          validateIfAuthorIsTheSame(comment.getAuthorId(), authorId);
+          comment.edit(newText);
+        }, () -> {
+          throw new CommentNotExists(String.format("Comment with given ID: %s does not exist",
+              commentId.id()));
+        });
   }
 
-  public void removeComment(CommentId commentId) {
+  public void removeComment(CommentId commentId, AuthorId authorId) {
+    this.comments.stream().filter(comment -> comment.getId().equals(commentId)).findFirst()
+        .ifPresentOrElse(comment -> validateIfAuthorIsTheSame(comment.getAuthorId(), authorId),
+            () -> {
+              throw new CommentNotExists(String.format("Comment with given ID: %s does not exist",
+                  commentId.id()));
+            });
     this.comments.removeIf(comment -> comment.getId().equals(commentId));
   }
 
@@ -70,5 +83,11 @@ public class Post {
   public void decreaseLikesInComment(CommentId commentId) {
     this.comments.stream().filter(comment -> comment.getId().equals(commentId)).findFirst()
         .ifPresent(Comment::decreaseLikes);
+  }
+
+  public void validateIfAuthorIsTheSame(AuthorId authorId, AuthorId authorIdThatWantsToEdit) {
+    if (!authorId.equals(authorIdThatWantsToEdit)) {
+      throw new UnauthorizedToEditException("User is not authorized to edit post or comment.");
+    }
   }
 }

@@ -15,7 +15,7 @@ class PostTest {
     Post testPost = getTestPost();
 
     Description newDescription = new Description("new description");
-    testPost.edit(newDescription);
+    testPost.edit(newDescription, testPost.getAuthorId());
 
     assertThat(testPost.getDescription()).isEqualTo(newDescription);
   }
@@ -74,7 +74,7 @@ class PostTest {
     Comment comment = testPost.getComments().stream().findFirst().orElseThrow(AssertionError::new);
 
     Description newDescription = new Description("new description");
-    testPost.editComment(comment.getId(), newDescription);
+    testPost.editComment(comment.getId(), newDescription, comment.getAuthorId());
 
     assertThat(testPost.getComments()).hasSize(1);
     assertThat(testPost.getComments().stream().map(Comment::getDescription)).contains(
@@ -88,7 +88,7 @@ class PostTest {
 
     assertThat(testPost.getComments()).hasSize(1);
 
-    testPost.removeComment(comment.getId());
+    testPost.removeComment(comment.getId(), comment.getAuthorId());
 
     assertThat(testPost.getComments()).isEmpty();
   }

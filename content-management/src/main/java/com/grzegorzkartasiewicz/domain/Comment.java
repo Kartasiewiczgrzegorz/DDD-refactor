@@ -9,7 +9,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-class Comment {
+public class Comment {
   private CommentId id;
   private Description description;
   private AuthorId authorId;
