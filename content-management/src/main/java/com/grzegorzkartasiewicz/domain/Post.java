@@ -39,7 +39,7 @@ public class Post {
   }
 
   public void increaseLikes() {
-    // pomyśleć jak zapewnić spójność atomową licznika
+    //TODO change to eventual consistency
     this.likeCounter = this.likeCounter.increase();
   }
 
@@ -77,12 +77,20 @@ public class Post {
 
   public void increaseLikesInComment(CommentId commentId) {
     this.comments.stream().filter(comment -> comment.getId().equals(commentId)).findFirst()
-        .ifPresent(Comment::increaseLikes);
+        .ifPresentOrElse(Comment::increaseLikes,
+            () -> {
+          throw new CommentNotExists(String.format("Comment with given ID: %s does not exist",
+              commentId.id()));
+            });
   }
 
   public void decreaseLikesInComment(CommentId commentId) {
     this.comments.stream().filter(comment -> comment.getId().equals(commentId)).findFirst()
-        .ifPresent(Comment::decreaseLikes);
+        .ifPresentOrElse(Comment::decreaseLikes,
+            () -> {
+              throw new CommentNotExists(String.format("Comment with given ID: %s does not exist",
+                  commentId.id()));
+            });
   }
 
   public void validateIfAuthorIsTheSame(AuthorId authorId, AuthorId authorIdThatWantsToEdit) {

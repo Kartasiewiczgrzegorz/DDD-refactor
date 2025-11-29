@@ -54,9 +54,9 @@ class PostServiceTest {
     Description commentDescription = new Description(COMMENT_VALID_DESCRIPTION);
     AuthorId commentAuthorId = new AuthorId(COMMENT_AUTHOR_ID);
     testComment = new Comment(new CommentId(UUID.randomUUID()), commentDescription, commentAuthorId,
-        new LikeCounter(0));
+        new LikeCounter(10));
     testPost = new Post(new PostId(UUID.randomUUID()), postDescription,
-        postAuthorId, new LikeCounter(0), new ArrayList<>(List.of(testComment)));
+        postAuthorId, new LikeCounter(10), new ArrayList<>(List.of(testComment)));
   }
 
   @Test
@@ -379,5 +379,117 @@ class PostServiceTest {
 
     assertThrows(CommentNotExists.class,
         () -> postService.removeComment(commentDeleteRequest));
+  }
+
+  @Test
+  @DisplayName("like post should increase like count and save post when post exists")
+  void likePost_shouldIncreaseLikeCountAndSavePostWhenPostExists() {
+    when(postRepository.findPostById(testPost.getId())).thenReturn(Optional.ofNullable(testPost));
+    when(postRepository.save(any(Post.class))).thenAnswer(i -> i.getArgument(0));
+
+    PostResponse postResponse = postService.likePost(testPost.getId().id());
+
+    assertThat(testPost.getLikeCounter().likeCount()).isEqualTo(postResponse.likeCount());
+  }
+
+  @Test
+  @DisplayName("like post should throw not found exception when post does not exist")
+  void likePost_shouldThrowNotFoundExceptionWhenPostDoesNotExist() {
+    when(postRepository.findPostById(testPost.getId())).thenReturn(Optional.empty());
+    UUID postId = testPost.getId().id();
+
+    assertThrows(PostNotExists.class,
+        () -> postService.likePost(postId));
+  }
+
+  @Test
+  @DisplayName("unlike post should decrease like count and save post when post exists and has likes")
+  void unlikePost_shouldDecreaseLikeCountAndSavePostWhenPostExistsAndHasLikes() {
+    when(postRepository.findPostById(testPost.getId())).thenReturn(Optional.ofNullable(testPost));
+    when(postRepository.save(any(Post.class))).thenAnswer(i -> i.getArgument(0));
+
+    PostResponse postResponse = postService.unlikePost(testPost.getId().id());
+
+    assertThat(testPost.getLikeCounter().likeCount()).isEqualTo(postResponse.likeCount());
+  }
+
+  @Test
+  @DisplayName("unlike post should check invariant and not decrease below zero")
+  void unlikePost_shouldCheckInvariantAndNotDecreaseBelowZero() {
+    when(postRepository.findPostById(testPost.getId())).thenReturn(Optional.empty());
+    UUID postId = testPost.getId().id();
+
+    assertThrows(PostNotExists.class,
+        () -> postService.unlikePost(postId));
+  }
+
+  @Test
+  @DisplayName("like comment should increase comment like count and save post")
+  void likeComment_shouldIncreaseCommentLikeCountAndSavePost() {
+    when(postRepository.findPostById(testPost.getId())).thenReturn(Optional.ofNullable(testPost));
+    when(postRepository.save(any(Post.class))).thenAnswer(i -> i.getArgument(0));
+
+    PostResponse postResponse = postService.likeComment(testPost.getId().id(),
+        testComment.getId().id());
+
+    assertThat(testComment.getLikeCounter().likeCount()).isEqualTo(
+        postResponse.comments().get(0).likeCount());
+  }
+
+  @Test
+  @DisplayName("like comment should throw exception when post does not exist")
+  void likeComment_shouldThrowExceptionWhenPostDoesNotExist() {
+    when(postRepository.findPostById(testPost.getId())).thenReturn(Optional.empty());
+    UUID postId = testPost.getId().id();
+    UUID commentId = testComment.getId().id();
+
+    assertThrows(PostNotExists.class,
+        () -> postService.likeComment(postId, commentId));
+  }
+
+  @Test
+  @DisplayName("like comment should throw exception when comment does not exist")
+  void likeComment_shouldThrowExceptionWhenCommentDoesNotExist() {
+    when(postRepository.findPostById(testPost.getId())).thenReturn(Optional.ofNullable(testPost));
+    UUID postId = testPost.getId().id();
+    UUID commentId = UUID.randomUUID();
+
+    assertThrows(CommentNotExists.class,
+        () -> postService.likeComment(postId, commentId));
+  }
+
+  @Test
+  @DisplayName("unlike comment should decrease comment like count")
+  void unlikeComment_shouldDecreaseCommentLikeCount() {
+    when(postRepository.findPostById(testPost.getId())).thenReturn(Optional.ofNullable(testPost));
+    when(postRepository.save(any(Post.class))).thenAnswer(i -> i.getArgument(0));
+
+    PostResponse postResponse = postService.unlikeComment(testPost.getId().id(),
+        testComment.getId().id());
+
+    assertThat(testComment.getLikeCounter().likeCount()).isEqualTo(
+        postResponse.comments().get(0).likeCount());
+  }
+
+  @Test
+  @DisplayName("unlike comment should throw exception when comment does not exist")
+  void unlikeComment_shouldThrowExceptionWhenCommentDoesNotExist() {
+    when(postRepository.findPostById(testPost.getId())).thenReturn(Optional.empty());
+    UUID postId = testPost.getId().id();
+    UUID commentId = testComment.getId().id();
+
+    assertThrows(PostNotExists.class,
+        () -> postService.unlikeComment(postId, commentId));
+  }
+
+  @Test
+  @DisplayName("unlike comment should check invariant and not decrease below zero")
+  void unlikeComment_shouldCheckInvariantAndNotDecreaseBelowZero() {
+    when(postRepository.findPostById(testPost.getId())).thenReturn(Optional.ofNullable(testPost));
+    UUID postId = testPost.getId().id();
+    UUID commentId = UUID.randomUUID();
+
+    assertThrows(CommentNotExists.class,
+        () -> postService.unlikeComment(postId, commentId));
   }
 }
