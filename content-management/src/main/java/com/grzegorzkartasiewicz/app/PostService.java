@@ -26,6 +26,7 @@ public class PostService {
         authorId);
 
     Post addedPost = postRepository.save(postToAdd);
+
     //TODO send notification email
 
     return getPostResponse(addedPost);
