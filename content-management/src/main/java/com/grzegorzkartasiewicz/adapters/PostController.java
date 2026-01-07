@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URI;
+import java.security.Principal;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -144,8 +145,8 @@ class PostController {
           @ApiResponse(responseCode = "404", description = "Post not found")
       })
   @PatchMapping("/{postId}/like")
-  ResponseEntity<PostResponse> likePost(@PathVariable UUID postId) {
-    return ResponseEntity.ok(postService.likePost(postId));
+  ResponseEntity<PostResponse> likePost(@PathVariable UUID postId, Principal principal) {
+    return ResponseEntity.ok(postService.likePost(postId, UUID.fromString(principal.getName())));
   }
 
   @Operation(summary = "Unlike a post",
@@ -156,8 +157,8 @@ class PostController {
           @ApiResponse(responseCode = "404", description = "Post not found")
       })
   @PatchMapping("/{postId}/unlike")
-  ResponseEntity<PostResponse> unlikePost(@PathVariable UUID postId) {
-    return ResponseEntity.ok(postService.unlikePost(postId));
+  ResponseEntity<PostResponse> unlikePost(@PathVariable UUID postId, Principal principal) {
+    return ResponseEntity.ok(postService.unlikePost(postId, UUID.fromString(principal.getName())));
   }
 
   @Operation(summary = "Like a comment",

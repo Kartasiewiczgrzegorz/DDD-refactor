@@ -1,6 +1,9 @@
 package com.grzegorzkartasiewicz.app;
 
 import com.grzegorzkartasiewicz.domain.Comment;
+import com.grzegorzkartasiewicz.domain.DomainEventPublisher;
+import com.grzegorzkartasiewicz.domain.PostLiked;
+import com.grzegorzkartasiewicz.domain.PostUnliked;
 import com.grzegorzkartasiewicz.domain.Post;
 import com.grzegorzkartasiewicz.domain.PostRepository;
 import com.grzegorzkartasiewicz.domain.vo.AuthorId;
@@ -18,6 +21,7 @@ public class PostService {
 
   public static final String POST_DONT_EXISTS_MESSAGE = "Post with given ID: %s does not exist";
   private final PostRepository postRepository;
+  private final DomainEventPublisher eventPublisher;
 
   public PostResponse addPost(PostCreationRequest postCreationRequest) {
     Description description = validateDescription(postCreationRequest.description());
@@ -94,26 +98,26 @@ public class PostService {
     handlePostChangeNotification(editedPost);
   }
 
-  public PostResponse likePost(UUID postId) {
+  public PostResponse likePost(UUID postId, UUID authorId) {
     Post postToLike = findPostOrThrow(postId);
     postToLike.increaseLikes();
 
-    Post likedPost = postRepository.save(postToLike);
+    eventPublisher.publish(new PostLiked(postToLike.getId(), new AuthorId(authorId)));
 
-    handlePostChangeNotification(likedPost);
+    handlePostChangeNotification(postToLike);
 
-    return getPostResponse(likedPost);
+    return getPostResponse(postToLike);
   }
 
-  public PostResponse unlikePost(UUID postId) {
+  public PostResponse unlikePost(UUID postId, UUID authorId) {
     Post postToUnlike = findPostOrThrow(postId);
     postToUnlike.decreaseLikes();
 
-    Post unlikedPost = postRepository.save(postToUnlike);
+    eventPublisher.publish(new PostUnliked(postToUnlike.getId(), new AuthorId(authorId)));
 
-    handlePostChangeNotification(unlikedPost);
+    handlePostChangeNotification(postToUnlike);
 
-    return getPostResponse(unlikedPost);
+    return getPostResponse(postToUnlike);
   }
 
   public PostResponse likeComment(UUID postId, UUID commentId) {

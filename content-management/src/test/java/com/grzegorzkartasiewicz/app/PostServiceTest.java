@@ -12,6 +12,7 @@ import com.grzegorzkartasiewicz.domain.Post;
 import com.grzegorzkartasiewicz.domain.PostRepository;
 import com.grzegorzkartasiewicz.domain.UnauthorizedToEditException;
 import com.grzegorzkartasiewicz.domain.ValidationException;
+import com.grzegorzkartasiewicz.domain.DomainEventPublisher;
 import com.grzegorzkartasiewicz.domain.vo.AuthorId;
 import com.grzegorzkartasiewicz.domain.vo.CommentId;
 import com.grzegorzkartasiewicz.domain.vo.Description;
@@ -40,6 +41,8 @@ class PostServiceTest {
   public static final String UPDATE_VALID_DESCRIPTION = "New description";
   @Mock
   private PostRepository postRepository;
+  @Mock
+  private DomainEventPublisher domainEventPublisher;
   @InjectMocks
   private PostService postService;
 
@@ -386,9 +389,8 @@ class PostServiceTest {
   @DisplayName("like post should increase like count and save post when post exists")
   void likePost_shouldIncreaseLikeCountAndSavePostWhenPostExists() {
     when(postRepository.findPostById(testPost.getId())).thenReturn(Optional.ofNullable(testPost));
-    when(postRepository.save(any(Post.class))).thenAnswer(i -> i.getArgument(0));
-
-    PostResponse postResponse = postService.likePost(testPost.getId().id());
+    
+    PostResponse postResponse = postService.likePost(testPost.getId().id(), UUID.randomUUID());
 
     assertThat(testPost.getLikeCounter().likeCount()).isEqualTo(postResponse.likeCount());
   }
@@ -400,16 +402,15 @@ class PostServiceTest {
     UUID postId = testPost.getId().id();
 
     assertThrows(PostNotExists.class,
-        () -> postService.likePost(postId));
+        () -> postService.likePost(postId, UUID.randomUUID()));
   }
 
   @Test
   @DisplayName("unlike post should decrease like count and save post when post exists and has likes")
   void unlikePost_shouldDecreaseLikeCountAndSavePostWhenPostExistsAndHasLikes() {
     when(postRepository.findPostById(testPost.getId())).thenReturn(Optional.ofNullable(testPost));
-    when(postRepository.save(any(Post.class))).thenAnswer(i -> i.getArgument(0));
-
-    PostResponse postResponse = postService.unlikePost(testPost.getId().id());
+    
+    PostResponse postResponse = postService.unlikePost(testPost.getId().id(), UUID.randomUUID());
 
     assertThat(testPost.getLikeCounter().likeCount()).isEqualTo(postResponse.likeCount());
   }
@@ -421,7 +422,7 @@ class PostServiceTest {
     UUID postId = testPost.getId().id();
 
     assertThrows(PostNotExists.class,
-        () -> postService.unlikePost(postId));
+        () -> postService.unlikePost(postId, UUID.randomUUID()));
   }
 
   @Test

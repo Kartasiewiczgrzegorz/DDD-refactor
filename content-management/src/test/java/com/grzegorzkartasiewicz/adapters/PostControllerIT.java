@@ -30,7 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-@WithMockUser
+@WithMockUser(username = "00000000-0000-0000-0000-000000000000")
 class PostControllerIT {
 
   @Autowired
@@ -203,7 +203,7 @@ class PostControllerIT {
     UUID authorId = UUID.randomUUID();
     PostResponse createdPost = postService.addPost(
         new PostCreationRequest("Post to unlike", authorId));
-    postService.likePost(createdPost.id()); // like first
+    postService.likePost(createdPost.id(), UUID.fromString("00000000-0000-0000-0000-000000000000")); // like first
 
     // when & then
     mockMvc.perform(patch("/posts/{postId}/unlike", createdPost.id()))
