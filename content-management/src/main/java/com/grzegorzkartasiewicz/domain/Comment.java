@@ -31,7 +31,6 @@ public class Comment {
   }
 
   void increaseLikes() {
-    // pomyśleć jak zapewnić spójność atomową licznika
     this.likeCounter = this.likeCounter.increase();
   }
   void decreaseLikes() {

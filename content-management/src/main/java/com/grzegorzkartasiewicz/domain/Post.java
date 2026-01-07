@@ -1,23 +1,28 @@
 package com.grzegorzkartasiewicz.domain;
 
+import com.grzegorzkartasiewicz.domain.vo.AuthorId;
 import com.grzegorzkartasiewicz.domain.vo.CommentId;
 import com.grzegorzkartasiewicz.domain.vo.Description;
 import com.grzegorzkartasiewicz.domain.vo.LikeCounter;
 import com.grzegorzkartasiewicz.domain.vo.PostId;
-import com.grzegorzkartasiewicz.domain.vo.AuthorId;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-@Getter
 @AllArgsConstructor
 public class Post {
 
+  @Getter
   private PostId id;
+  @Getter
   private Description description;
+  @Getter
   private AuthorId authorId;
+  @Getter
   private LikeCounter likeCounter;
+
   private List<Comment> comments;
 
 
@@ -33,8 +38,12 @@ public class Post {
     return new Post(text, authorId);
   }
 
+  public List<Comment> getComments() {
+    return Collections.unmodifiableList(comments);
+  }
+
   public void edit(Description newText, AuthorId authorId) {
-    validateIfAuthorIsTheSame(this.authorId, authorId);
+    validateAuthor(this.authorId, authorId);
     this.description = newText;
   }
 
@@ -44,10 +53,9 @@ public class Post {
   }
 
   public void decreaseLikes() {
-    if (this.likeCounter.likeCount() == 0) {
-      return;
+    if (this.likeCounter.likeCount() > 0) {
+      this.likeCounter = this.likeCounter.decrease();
     }
-    this.likeCounter = this.likeCounter.decrease();
   }
 
   public void addComment(Description text, AuthorId authorId) {
@@ -55,47 +63,41 @@ public class Post {
   }
 
   public void editComment(CommentId commentId, Description newText, AuthorId authorId) {
-    this.comments.stream().filter(comment -> comment.getId().equals(commentId)).findFirst()
-        .ifPresentOrElse(comment -> {
-          validateIfAuthorIsTheSame(comment.getAuthorId(), authorId);
-          comment.edit(newText);
-        }, () -> {
-          throw new CommentNotExists(String.format("Comment with given ID: %s does not exist",
-              commentId.id()));
-        });
+    Comment comment = findCommentOrThrow(commentId);
+    validateAuthor(comment.getAuthorId(), authorId);
+    comment.edit(newText);
   }
 
   public void removeComment(CommentId commentId, AuthorId authorId) {
-    this.comments.stream().filter(comment -> comment.getId().equals(commentId)).findFirst()
-        .ifPresentOrElse(comment -> validateIfAuthorIsTheSame(comment.getAuthorId(), authorId),
-            () -> {
-              throw new CommentNotExists(String.format("Comment with given ID: %s does not exist",
-                  commentId.id()));
-            });
-    this.comments.removeIf(comment -> comment.getId().equals(commentId));
+    Comment comment = findCommentOrThrow(commentId);
+    validateAuthor(comment.getAuthorId(), authorId);
+    this.comments.remove(comment);
   }
 
   public void increaseLikesInComment(CommentId commentId) {
-    this.comments.stream().filter(comment -> comment.getId().equals(commentId)).findFirst()
-        .ifPresentOrElse(Comment::increaseLikes,
-            () -> {
-          throw new CommentNotExists(String.format("Comment with given ID: %s does not exist",
-              commentId.id()));
-            });
+    findCommentOrThrow(commentId).increaseLikes();
   }
 
   public void decreaseLikesInComment(CommentId commentId) {
-    this.comments.stream().filter(comment -> comment.getId().equals(commentId)).findFirst()
-        .ifPresentOrElse(Comment::decreaseLikes,
-            () -> {
-              throw new CommentNotExists(String.format("Comment with given ID: %s does not exist",
-                  commentId.id()));
-            });
+    findCommentOrThrow(commentId).decreaseLikes();
   }
 
-  public void validateIfAuthorIsTheSame(AuthorId authorId, AuthorId authorIdThatWantsToEdit) {
-    if (!authorId.equals(authorIdThatWantsToEdit)) {
+  public void validatePostAuthor(AuthorId authorIdThatWantsToEdit) {
+    validateAuthor(this.authorId, authorIdThatWantsToEdit);
+  }
+
+  private void validateAuthor(AuthorId ownerId, AuthorId editorId) {
+    if (!ownerId.equals(editorId)) {
       throw new UnauthorizedToEditException("User is not authorized to edit post or comment.");
     }
+  }
+
+  private Comment findCommentOrThrow(CommentId commentId) {
+    return this.comments.stream()
+        .filter(comment -> comment.getId().equals(commentId))
+        .findFirst()
+        .orElseThrow(() -> new CommentNotExists(
+            String.format("Comment with given ID: %s does not exist", commentId.id())
+        ));
   }
 }

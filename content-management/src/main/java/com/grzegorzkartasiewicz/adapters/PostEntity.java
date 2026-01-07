@@ -16,7 +16,6 @@ import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
@@ -48,7 +47,7 @@ class PostEntity {
         description,
         authorId,
         likeCounter,
-        comments.stream().map(CommentEntity::toDomain).collect(Collectors.toList())
+        comments.stream().map(CommentEntity::toDomain).toList()
     );
   }
 
@@ -61,7 +60,7 @@ class PostEntity {
     if (post.getComments() != null) {
       entity.comments = post.getComments().stream()
           .map(comment -> CommentEntity.fromDomain(comment, entity))
-          .collect(Collectors.toList());
+          .toList();
     }
     return entity;
   }
