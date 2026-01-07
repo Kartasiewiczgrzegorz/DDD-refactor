@@ -336,6 +336,7 @@ class PostServiceTest {
         COMMENT_AUTHOR_ID);
 
     when(postRepository.findPostById(testPost.getId())).thenReturn(Optional.ofNullable(testPost));
+    when(postRepository.save(any(Post.class))).thenReturn(testPost);
 
     postService.removeComment(commentDeleteRequest);
 
