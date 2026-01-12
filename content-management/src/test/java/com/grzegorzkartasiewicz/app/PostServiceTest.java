@@ -1,18 +1,18 @@
 package com.grzegorzkartasiewicz.app;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.grzegorzkartasiewicz.domain.Comment;
 import com.grzegorzkartasiewicz.domain.CommentNotExists;
+import com.grzegorzkartasiewicz.domain.DomainEventPublisher;
 import com.grzegorzkartasiewicz.domain.Post;
 import com.grzegorzkartasiewicz.domain.PostRepository;
 import com.grzegorzkartasiewicz.domain.UnauthorizedToEditException;
 import com.grzegorzkartasiewicz.domain.ValidationException;
-import com.grzegorzkartasiewicz.domain.DomainEventPublisher;
 import com.grzegorzkartasiewicz.domain.vo.AuthorId;
 import com.grzegorzkartasiewicz.domain.vo.CommentId;
 import com.grzegorzkartasiewicz.domain.vo.Description;
@@ -429,10 +429,9 @@ class PostServiceTest {
   @DisplayName("like comment should increase comment like count and save post")
   void likeComment_shouldIncreaseCommentLikeCountAndSavePost() {
     when(postRepository.findPostById(testPost.getId())).thenReturn(Optional.ofNullable(testPost));
-    when(postRepository.save(any(Post.class))).thenAnswer(i -> i.getArgument(0));
 
     PostResponse postResponse = postService.likeComment(testPost.getId().id(),
-        testComment.getId().id());
+        testComment.getId().id(), UUID.randomUUID());
 
     assertThat(testComment.getLikeCounter().likeCount()).isEqualTo(
         postResponse.comments().get(0).likeCount());
@@ -446,7 +445,7 @@ class PostServiceTest {
     UUID commentId = testComment.getId().id();
 
     assertThrows(PostNotExists.class,
-        () -> postService.likeComment(postId, commentId));
+        () -> postService.likeComment(postId, commentId, UUID.randomUUID()));
   }
 
   @Test
@@ -457,17 +456,16 @@ class PostServiceTest {
     UUID commentId = UUID.randomUUID();
 
     assertThrows(CommentNotExists.class,
-        () -> postService.likeComment(postId, commentId));
+        () -> postService.likeComment(postId, commentId, UUID.randomUUID()));
   }
 
   @Test
   @DisplayName("unlike comment should decrease comment like count")
   void unlikeComment_shouldDecreaseCommentLikeCount() {
     when(postRepository.findPostById(testPost.getId())).thenReturn(Optional.ofNullable(testPost));
-    when(postRepository.save(any(Post.class))).thenAnswer(i -> i.getArgument(0));
 
     PostResponse postResponse = postService.unlikeComment(testPost.getId().id(),
-        testComment.getId().id());
+        testComment.getId().id(), UUID.randomUUID());
 
     assertThat(testComment.getLikeCounter().likeCount()).isEqualTo(
         postResponse.comments().get(0).likeCount());
@@ -481,7 +479,7 @@ class PostServiceTest {
     UUID commentId = testComment.getId().id();
 
     assertThrows(PostNotExists.class,
-        () -> postService.unlikeComment(postId, commentId));
+        () -> postService.unlikeComment(postId, commentId, UUID.randomUUID()));
   }
 
   @Test
@@ -492,6 +490,6 @@ class PostServiceTest {
     UUID commentId = UUID.randomUUID();
 
     assertThrows(CommentNotExists.class,
-        () -> postService.unlikeComment(postId, commentId));
+        () -> postService.unlikeComment(postId, commentId, UUID.randomUUID()));
   }
 }

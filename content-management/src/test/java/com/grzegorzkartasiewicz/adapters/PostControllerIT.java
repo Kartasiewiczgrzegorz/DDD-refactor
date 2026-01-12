@@ -244,7 +244,8 @@ class PostControllerIT {
         new CommentCreationRequest(createdPost.id(), "Comment to unlike", commentAuthorId));
     UUID commentId = postWithComment.comments().get(0).id();
 
-    postService.likeComment(createdPost.id(), commentId); // like first
+    postService.likeComment(createdPost.id(), commentId,
+        UUID.fromString("00000000-0000-0000-0000-000000000000")); // like first
 
     // when & then
     mockMvc.perform(

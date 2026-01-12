@@ -1,6 +1,7 @@
 package com.grzegorzkartasiewicz.domain.vo;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.grzegorzkartasiewicz.domain.ValidationException;
 import org.junit.jupiter.api.Test;
@@ -8,23 +9,17 @@ import org.junit.jupiter.api.Test;
 class DescriptionTest {
 
   @Test
-  void validateShouldNotThrowExceptionWhenDescriptionIsValid() {
-    Description description = new Description("Description");
-
-    description.validate();
+  void shouldCreateDescriptionWhenTextIsValid() {
+    assertDoesNotThrow(() -> new Description("Description"));
   }
 
   @Test
-  void validateShouldThrowExceptionWhenDescriptionIsNull() {
-    Description description = new Description(null);
-
-    assertThrows(ValidationException.class, description::validate);
+  void shouldThrowExceptionWhenDescriptionIsNull() {
+    assertThrows(ValidationException.class, () -> new Description(null));
   }
 
   @Test
-  void validateShouldThrowExceptionWhenDescriptionIsInvalid() {
-    Description description = new Description(" ");
-
-    assertThrows(ValidationException.class, description::validate);
+  void shouldThrowExceptionWhenDescriptionIsInvalid() {
+    assertThrows(ValidationException.class, () -> new Description(" "));
   }
 }

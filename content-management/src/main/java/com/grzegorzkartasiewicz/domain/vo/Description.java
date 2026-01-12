@@ -4,9 +4,9 @@ import com.grzegorzkartasiewicz.domain.ValidationException;
 
 public record Description(String text) {
 
-  public void validate() {
-    if (this.text == null || text.isBlank()) {
-      throw new ValidationException("Name is required");
+  public Description {
+    if (text == null || text.isBlank()) {
+      throw new ValidationException("Description is required");
     }
   }
 }

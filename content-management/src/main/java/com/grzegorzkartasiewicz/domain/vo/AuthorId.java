@@ -8,7 +8,7 @@ import java.util.UUID;
 @Embeddable
 public record AuthorId(UUID id) implements Serializable {
 
-  public void validate() {
+  public AuthorId {
     if (id == null) {
       throw new ValidationException("Author id cannot be null");
     }

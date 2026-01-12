@@ -170,8 +170,9 @@ class PostController {
       })
   @PatchMapping("/{postId}/comments/{commentId}/like")
   ResponseEntity<PostResponse> likeComment(@PathVariable UUID postId,
-      @PathVariable UUID commentId) {
-    return ResponseEntity.ok(postService.likeComment(postId, commentId));
+      @PathVariable UUID commentId, Principal principal) {
+    return ResponseEntity.ok(
+        postService.likeComment(postId, commentId, UUID.fromString(principal.getName())));
   }
 
   @Operation(summary = "Unlike a comment",
@@ -183,7 +184,8 @@ class PostController {
       })
   @PatchMapping("/{postId}/comments/{commentId}/unlike")
   ResponseEntity<PostResponse> unlikeComment(@PathVariable UUID postId,
-      @PathVariable UUID commentId) {
-    return ResponseEntity.ok(postService.unlikeComment(postId, commentId));
+      @PathVariable UUID commentId, Principal principal) {
+    return ResponseEntity.ok(
+        postService.unlikeComment(postId, commentId, UUID.fromString(principal.getName())));
   }
 }

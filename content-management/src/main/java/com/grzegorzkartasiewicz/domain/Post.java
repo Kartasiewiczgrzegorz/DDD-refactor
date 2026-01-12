@@ -11,6 +11,10 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+/**
+ * Aggregate Root representing a Post in the system. Manages the lifecycle of the post, including
+ * comments and like counters.
+ */
 @AllArgsConstructor
 public class Post {
 
@@ -34,6 +38,13 @@ public class Post {
     this.comments = new ArrayList<>();
   }
 
+  /**
+   * Factory method to create a new Post.
+   *
+   * @param text     The description of the post.
+   * @param authorId The ID of the author creating the post.
+   * @return A new Post instance.
+   */
   public static Post createNew(Description text, AuthorId authorId) {
     return new Post(text, authorId);
   }
@@ -42,16 +53,31 @@ public class Post {
     return Collections.unmodifiableList(comments);
   }
 
+  /**
+   * Edits the description of the post.
+   *
+   * @param newText The new description text.
+   * @param authorId The ID of the author initiating the edit (must match the post author).
+   * @throws UnauthorizedToEditException if the authorId does not match the post author.
+   */
   public void edit(Description newText, AuthorId authorId) {
     validateAuthor(this.authorId, authorId);
     this.description = newText;
   }
 
+  /**
+   * Optimistically increases the like counter.
+   * The actual persistence is handled via eventual consistency.
+   */
   public void increaseLikes() {
     //TODO change to eventual consistency
     this.likeCounter = this.likeCounter.increase();
   }
 
+  /**
+   * Optimistically decreases the like counter.
+   * The actual persistence is handled via eventual consistency.
+   */
   public void decreaseLikes() {
     if (this.likeCounter.likeCount() > 0) {
       this.likeCounter = this.likeCounter.decrease();
