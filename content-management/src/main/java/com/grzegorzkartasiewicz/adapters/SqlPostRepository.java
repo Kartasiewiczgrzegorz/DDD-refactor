@@ -15,10 +15,6 @@ interface SqlPostRepository extends Repository<PostEntity, UUID> {
   void deleteById(UUID id);
 
   @Modifying
-  @Query(value = "UPDATE posts SET like_counter = like_counter + 1 WHERE id = :id", nativeQuery = true)
-  void incrementLikeCount(@Param("id") UUID id);
-
-  @Modifying
-  @Query(value = "UPDATE posts SET like_counter = like_counter - 1 WHERE id = :id AND like_counter > 0", nativeQuery = true)
-  void decrementLikeCount(@Param("id") UUID id);
+  @Query(value = "UPDATE posts SET like_counter = like_counter + :delta WHERE id = :id", nativeQuery = true)
+  void updateLikeCount(@Param("id") UUID id, @Param("delta") int delta);
 }
