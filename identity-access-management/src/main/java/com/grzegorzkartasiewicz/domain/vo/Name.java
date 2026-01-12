@@ -4,11 +4,11 @@ import com.grzegorzkartasiewicz.domain.ValidationException;
 
 public record Name(String name, String surname) {
 
-  public void validate() {
-    if (this.name == null) {
+  public Name {
+    if (name == null || name.isBlank()) {
       throw new ValidationException("Name is required");
     }
-    if (this.surname == null) {
+    if (surname == null || surname.isBlank()) {
       throw new ValidationException("Surname is required");
     }
   }

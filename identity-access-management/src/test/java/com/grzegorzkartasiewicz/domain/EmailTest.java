@@ -1,6 +1,7 @@
 package com.grzegorzkartasiewicz.domain;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.grzegorzkartasiewicz.domain.vo.Email;
 import org.junit.jupiter.api.Test;
@@ -8,23 +9,17 @@ import org.junit.jupiter.api.Test;
 class EmailTest {
 
   @Test
-  void validateShouldNotThrowExceptionWhenEmailIsValid() {
-    Email email = new Email("email@test.com");
-
-    email.validate();
+  void shouldCreateEmailWhenEmailIsValid() {
+    assertDoesNotThrow(() -> new Email("email@test.com"));
   }
 
   @Test
-  void validateShouldThrowExceptionWhenEmailIsNull() {
-    Email email = new Email(null);
-
-    assertThrows(ValidationException.class, email::validate);
+  void shouldThrowExceptionWhenEmailIsNull() {
+    assertThrows(ValidationException.class, () -> new Email(null));
   }
 
   @Test
-  void validateShouldThrowExceptionWhenEmailIsInvalid() {
-    Email email = new Email("invalidEmail");
-
-    assertThrows(ValidationException.class, email::validate);
+  void shouldThrowExceptionWhenEmailIsInvalid() {
+    assertThrows(ValidationException.class, () -> new Email("invalidEmail"));
   }
 }

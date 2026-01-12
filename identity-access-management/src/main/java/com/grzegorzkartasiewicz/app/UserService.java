@@ -1,14 +1,14 @@
 package com.grzegorzkartasiewicz.app;
 
 import com.grzegorzkartasiewicz.domain.DomainEventPublisher;
-import com.grzegorzkartasiewicz.domain.vo.Email;
 import com.grzegorzkartasiewicz.domain.PasswordDoesNotMatchException;
 import com.grzegorzkartasiewicz.domain.User;
+import com.grzegorzkartasiewicz.domain.UserRepository;
+import com.grzegorzkartasiewicz.domain.ValidationException;
+import com.grzegorzkartasiewicz.domain.vo.Email;
 import com.grzegorzkartasiewicz.domain.vo.Name;
 import com.grzegorzkartasiewicz.domain.vo.RawPassword;
 import com.grzegorzkartasiewicz.domain.vo.UserId;
-import com.grzegorzkartasiewicz.domain.UserRepository;
-import com.grzegorzkartasiewicz.domain.ValidationException;
 import com.grzegorzkartasiewicz.domain.vo.Verification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,16 +31,19 @@ public class UserService {
    * @param userRegistrationRequest The registration data from the user.
    * @return A {@link RegisteredUser} object containing the new user's data and a JWT.
    * @throws UserAlreadyExistsException if a user with the given email already exists.
-   * @throws ValidationException        if the provided data (e.g., password) is invalid.
+   * @throws InvalidUserDataException   if the provided data (e.g., password) is invalid.
    */
   public RegisteredUser signUp(UserRegistrationRequest userRegistrationRequest) {
-    validateIfUserExists(userRegistrationRequest.email());
-    User signedUser;
-    signedUser = createUserOrThrowIfValidationFails(userRegistrationRequest);
-    //TODO send verification email
+    try {
+      validateIfUserExists(userRegistrationRequest.email());
+      User signedUser = createUser(userRegistrationRequest);
+      //TODO send verification email
 
-    Token token = authorizationPort.generateToken(signedUser);
-    return mapUserToRegisterResponse(signedUser, token);
+      Token token = authorizationPort.generateToken(signedUser);
+      return mapUserToRegisterResponse(signedUser, token);
+    } catch (ValidationException e) {
+      throw new InvalidUserDataException(e.getMessage());
+    }
   }
 
   /**
@@ -50,14 +53,20 @@ public class UserService {
    * @return A {@link LoggedUser} object containing the logged-in user's data and a JWT.
    * @throws InvalidCredentialsException if the email or password is incorrect.
    * @throws UserBlockedException        if the user account is blocked.
+   * @throws InvalidUserDataException    if input data format is invalid.
    */
   public LoggedUser logIn(UserLogInRequest userLogInRequest) {
-    User user = findUserByEmailOrThrow(userLogInRequest.email());
-    validateIfUserIsBlocked(user);
-    validateCredentialsAndHandleFailedAttempt(userLogInRequest, user);
-    Token token = authorizationPort.generateToken(user);
-    return new LoggedUser(user.getName().name(), user.getName().surname(), user.getEmail().email(),
-        token.token());
+    try {
+      User user = findUserByEmailOrThrow(userLogInRequest.email());
+      validateIfUserIsBlocked(user);
+      validateCredentialsAndHandleFailedAttempt(userLogInRequest, user);
+      Token token = authorizationPort.generateToken(user);
+      return new LoggedUser(user.getName().name(), user.getName().surname(),
+          user.getEmail().email(),
+          token.token());
+    } catch (ValidationException e) {
+      throw new InvalidUserDataException(e.getMessage());
+    }
   }
 
   /**
@@ -67,14 +76,19 @@ public class UserService {
    *
    * @param resetPasswordRequest The request object containing the user's email.
    * @throws InvalidCredentialsException if a user with the given email is not found.
+   * @throws InvalidUserDataException    if input data format is invalid.
    */
   public void requestResetPassword(ResetPasswordRequest resetPasswordRequest) {
-    User user = findUserByEmailOrThrow(resetPasswordRequest.email());
+    try {
+      User user = findUserByEmailOrThrow(resetPasswordRequest.email());
 
-    //TODO send reset password email
-    ResetPasswordEvent resetPasswordEvent = new ResetPasswordEvent(user.getId(),
-        resetPasswordRequest.password());
-    publisher.publish(resetPasswordEvent);
+      //TODO send reset password email
+      ResetPasswordEvent resetPasswordEvent = new ResetPasswordEvent(user.getId(),
+          resetPasswordRequest.password());
+      publisher.publish(resetPasswordEvent);
+    } catch (ValidationException e) {
+      throw new InvalidUserDataException(e.getMessage());
+    }
   }
 
   /**
@@ -84,14 +98,17 @@ public class UserService {
    * @param userId   The unique identifier of the user.
    * @param password The new, raw password to be set and hashed.
    * @throws InvalidCredentialsException if a user with the given ID is not found.
-   * @throws ValidationException         if the new password does not meet the required validation
+   * @throws InvalidUserDataException    if the new password does not meet the required validation
    *                                     criteria.
    */
   public void resetPassword(UserId userId, String password) {
-    User user = findUserByIdOrThrow(userId);
-    RawPassword.validate(password);
-    user.resetPassword(new RawPassword(password), passwordEncoder);
-    userRepository.save(user);
+    try {
+      User user = findUserByIdOrThrow(userId);
+      user.resetPassword(new RawPassword(password), passwordEncoder);
+      userRepository.save(user);
+    } catch (ValidationException e) {
+      throw new InvalidUserDataException(e.getMessage());
+    }
   }
 
   /**
@@ -128,16 +145,9 @@ public class UserService {
     }
   }
 
-  private User createUserOrThrowIfValidationFails(UserRegistrationRequest userRegistrationRequest) {
-    User signedUser;
-    try {
-      RawPassword.validate(userRegistrationRequest.password());
-      signedUser = mapRequestToUser(userRegistrationRequest);
-      signedUser = userRepository.save(signedUser);
-    } catch (ValidationException e) {
-      throw new InvalidCredentialsException("Invalid credentials");
-    }
-    return signedUser;
+  private User createUser(UserRegistrationRequest userRegistrationRequest) {
+    User signedUser = mapRequestToUser(userRegistrationRequest);
+    return userRepository.save(signedUser);
   }
 
   private static RegisteredUser mapUserToRegisterResponse(User signedUser, Token token) {
@@ -148,14 +158,9 @@ public class UserService {
 
   private User mapRequestToUser(UserRegistrationRequest userRegistrationRequest) {
     Name name = new Name(userRegistrationRequest.firstName(), userRegistrationRequest.lastName());
-    name.validate();
-    Email email = new Email(
-        userRegistrationRequest.email());
-    email.validate();
-    return User.createNew(
-        name,
-        email, new RawPassword(userRegistrationRequest.password()),
-        passwordEncoder);
+    Email email = new Email(userRegistrationRequest.email());
+    RawPassword password = new RawPassword(userRegistrationRequest.password());
+    return User.createNew(name, email, password, passwordEncoder);
   }
 
   private User findUserByIdOrThrow(UserId userId) {

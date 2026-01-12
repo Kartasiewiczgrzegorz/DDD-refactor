@@ -1,21 +1,21 @@
 package com.grzegorzkartasiewicz.app;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.grzegorzkartasiewicz.domain.vo.Blocked;
 import com.grzegorzkartasiewicz.domain.DomainEventPublisher;
+import com.grzegorzkartasiewicz.domain.User;
+import com.grzegorzkartasiewicz.domain.UserRepository;
+import com.grzegorzkartasiewicz.domain.vo.Blocked;
 import com.grzegorzkartasiewicz.domain.vo.Email;
 import com.grzegorzkartasiewicz.domain.vo.InvalidLogInCounter;
 import com.grzegorzkartasiewicz.domain.vo.Name;
 import com.grzegorzkartasiewicz.domain.vo.Password;
-import com.grzegorzkartasiewicz.domain.User;
 import com.grzegorzkartasiewicz.domain.vo.UserId;
-import com.grzegorzkartasiewicz.domain.UserRepository;
 import com.grzegorzkartasiewicz.domain.vo.Verification;
 import java.util.Optional;
 import java.util.UUID;
@@ -100,14 +100,14 @@ class UserServiceTest {
   }
 
   @Test
-  @DisplayName("signIn should throw InvalidCredentialsException for invalid data")
+  @DisplayName("signIn should throw InvalidUserDataException for invalid data")
   void signUp_shouldThrowExceptionForInvalidData() {
     // given
     UserRegistrationRequest request = new UserRegistrationRequest(null, "Doe",
         "john.doe@example.com", "Password123!");
 
     // when & then
-    assertThrows(InvalidCredentialsException.class, () -> userService.signUp(request));
+    assertThrows(InvalidUserDataException.class, () -> userService.signUp(request));
   }
 
 
