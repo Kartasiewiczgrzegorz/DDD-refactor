@@ -70,7 +70,6 @@ public class Post {
    * The actual persistence is handled via eventual consistency.
    */
   public void increaseLikes() {
-    //TODO change to eventual consistency
     this.likeCounter = this.likeCounter.increase();
   }
 

@@ -36,10 +36,11 @@ class UserTest {
   void addFriend_shouldAddFriendToSet() {
     // given
     User user = User.createNew(new Name("John", "Doe"), new Email("john.doe@example.com"));
-    Friend friend = new Friend(new UserId(UUID.randomUUID()));
+    UserId friendId = new UserId(UUID.randomUUID());
+    Friend friend = new Friend(friendId);
 
     // when
-    user.addFriend(friend);
+    user.addFriend(friendId);
 
     // then
     assertThat(user.getFriends()).hasSize(1);
@@ -51,11 +52,12 @@ class UserTest {
   void addFriend_shouldNotAddDuplicateFriend() {
     // given
     User user = User.createNew(new Name("John", "Doe"), new Email("john.doe@example.com"));
-    Friend friend = new Friend(new UserId(UUID.randomUUID()));
-    user.addFriend(friend);
+    UserId friendId = new UserId(UUID.randomUUID());
+    Friend friend = new Friend(friendId);
+    user.addFriend(friendId);
 
     // when
-    user.addFriend(friend);
+    user.addFriend(friendId);
 
     // then
     assertThat(user.getFriends()).hasSize(1);
@@ -66,11 +68,12 @@ class UserTest {
   void removeFriend_shouldRemoveFriendFromSet() {
     // given
     User user = User.createNew(new Name("John", "Doe"), new Email("john.doe@example.com"));
-    Friend friend = new Friend(new UserId(UUID.randomUUID()));
-    user.addFriend(friend);
+    UserId friendId = new UserId(UUID.randomUUID());
+    Friend friend = new Friend(friendId);
+    user.addFriend(friendId);
 
     // when
-    user.removeFriend(friend);
+    user.removeFriend(friendId);
 
     // then
     assertThat(user.getFriends()).isEmpty();
@@ -81,12 +84,14 @@ class UserTest {
   void removeFriend_shouldDoNothingWhenFriendNotFound() {
     // given
     User user = User.createNew(new Name("John", "Doe"), new Email("john.doe@example.com"));
-    Friend friend = new Friend(new UserId(UUID.randomUUID()));
-    user.addFriend(friend);
-    Friend otherFriend = new Friend(new UserId(UUID.randomUUID()));
+    UserId friendId = new UserId(UUID.randomUUID());
+    Friend friend = new Friend(friendId);
+    user.addFriend(friendId);
+    UserId otherFriendId = new UserId(UUID.randomUUID());
+    Friend otherFriend = new Friend(otherFriendId);
 
     // when
-    user.removeFriend(otherFriend);
+    user.removeFriend(otherFriendId);
 
     // then
     assertThat(user.getFriends()).hasSize(1);
@@ -98,10 +103,11 @@ class UserTest {
   void addFollower_shouldAddFollowerToSet() {
     // given
     User user = User.createNew(new Name("John", "Doe"), new Email("john.doe@example.com"));
-    Follower follower = new Follower(new UserId(UUID.randomUUID()));
+    UserId followerId = new UserId(UUID.randomUUID());
+    Follower follower = new Follower(followerId);
 
     // when
-    user.addFollower(follower);
+    user.addFollower(followerId);
 
     // then
     assertThat(user.getFollowers()).hasSize(1);
@@ -113,11 +119,11 @@ class UserTest {
   void addFollower_shouldNotAddDuplicateFollower() {
     // given
     User user = User.createNew(new Name("John", "Doe"), new Email("john.doe@example.com"));
-    Follower follower = new Follower(new UserId(UUID.randomUUID()));
-    user.addFollower(follower);
+    UserId followerId = new UserId(UUID.randomUUID());
+    user.addFollower(followerId);
 
     // when
-    user.addFollower(follower);
+    user.addFollower(followerId);
 
     // then
     assertThat(user.getFollowers()).hasSize(1);
@@ -128,11 +134,12 @@ class UserTest {
   void removeFollower_shouldRemoveFollowerFromSet() {
     // given
     User user = User.createNew(new Name("John", "Doe"), new Email("john.doe@example.com"));
-    Follower follower = new Follower(new UserId(UUID.randomUUID()));
-    user.addFollower(follower);
+    UserId followerId = new UserId(UUID.randomUUID());
+    Follower follower = new Follower(followerId);
+    user.addFollower(followerId);
 
     // when
-    user.removeFollower(follower);
+    user.removeFollower(followerId);
 
     // then
     assertThat(user.getFollowers()).isEmpty();
@@ -143,12 +150,13 @@ class UserTest {
   void removeFollower_shouldDoNothingWhenFollowerNotFound() {
     // given
     User user = User.createNew(new Name("John", "Doe"), new Email("john.doe@example.com"));
-    Follower follower = new Follower(new UserId(UUID.randomUUID()));
-    user.addFollower(follower);
-    Follower otherFollower = new Follower(new UserId(UUID.randomUUID()));
+    UserId followerId = new UserId(UUID.randomUUID());
+    Follower follower = new Follower(followerId);
+    user.addFollower(followerId);
+    UserId otherFollowerId = new UserId(UUID.randomUUID());
 
     // when
-    user.removeFollower(otherFollower);
+    user.removeFollower(otherFollowerId);
 
     // then
     assertThat(user.getFollowers()).hasSize(1);
