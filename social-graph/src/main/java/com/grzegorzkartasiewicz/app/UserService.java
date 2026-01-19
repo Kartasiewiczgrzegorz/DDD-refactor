@@ -32,10 +32,58 @@ public class UserService {
     User approver = userRepository.findById(new UserId(approverId)).orElseThrow();
     User requester = userRepository.findById(new UserId(requesterId)).orElseThrow();
 
-    approver.addFriend(requester.getId());
-    requester.addFriend(approver.getId());
+    approver.acceptFriendRequest(requester.getId());
+    requester.acceptFriendRequestSentByMe(approver.getId());
 
     userRepository.save(approver);
     userRepository.save(requester);
+  }
+
+  public void rejectFriendRequest(UUID rejectorId, UUID requesterId) {
+    User rejector = userRepository.findById(new UserId(rejectorId)).orElseThrow();
+    User requester = userRepository.findById(new UserId(requesterId)).orElseThrow();
+
+    rejector.rejectFriendRequest(requester.getId());
+    requester.rejectFriendRequestSentByMe(rejector.getId());
+
+    userRepository.save(rejector);
+    userRepository.save(requester);
+  }
+
+  public void removeFriend(UUID initiatorId, UUID friendId) {
+    User initiator = userRepository.findById(new UserId(initiatorId)).orElseThrow();
+    User friend = userRepository.findById(new UserId(friendId)).orElseThrow();
+
+    initiator.removeFriend(friend.getId());
+    friend.removeFriend(initiator.getId());
+
+    userRepository.save(initiator);
+    userRepository.save(friend);
+  }
+
+  public void followUser(UUID followerId, UUID followedId) {
+    if (followerId.equals(followedId)) {
+      throw new SelfInteractionException("You can't follow yourself.");
+    }
+
+    User follower = userRepository.findById(new UserId(followerId)).orElseThrow();
+    User followed = userRepository.findById(new UserId(followedId)).orElseThrow();
+
+    follower.follow(followed.getId());
+    followed.addFollower(follower.getId());
+
+    userRepository.save(follower);
+    userRepository.save(followed);
+  }
+
+  public void unfollowUser(UUID followerId, UUID followedId) {
+    User follower = userRepository.findById(new UserId(followerId)).orElseThrow();
+    User followed = userRepository.findById(new UserId(followedId)).orElseThrow();
+
+    follower.unfollow(followed.getId());
+    followed.removeFollower(follower.getId());
+
+    userRepository.save(follower);
+    userRepository.save(followed);
   }
 }
