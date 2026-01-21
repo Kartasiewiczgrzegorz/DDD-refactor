@@ -93,8 +93,6 @@ class UserServiceTest {
         new HashSet<>(), followers, new HashSet<>(), new HashSet<>(), new HashSet<>());
   }
 
-  // UC1: Send Friend Request
-
   @Test
   @DisplayName("sendFriendRequest should add request to both users when valid")
   void sendFriendRequest_shouldAddRequestToBothUsersWhenValid() {
@@ -103,7 +101,7 @@ class UserServiceTest {
     when(userRepository.findById(targetId)).thenReturn(Optional.of(target));
 
     // when
-    userService.sendFriendRequest(requesterId.id(), targetId.id());
+    userService.sendFriendRequest(new FriendRequestSendingRequest(requesterId.id(), targetId.id()));
 
     // then
     assertThat(requester.getSentFriendRequests()).extracting(FriendRequest::friendRequestId)
@@ -117,8 +115,10 @@ class UserServiceTest {
   @Test
   @DisplayName("sendFriendRequest should throw SelfInteractionException when requester equals target")
   void sendFriendRequest_shouldThrowSelfInteractionExceptionWhenRequesterEqualsTarget() {
+    FriendRequestSendingRequest request = new FriendRequestSendingRequest(requesterId.id(),
+        requesterId.id());
     assertThrows(SelfInteractionException.class,
-        () -> userService.sendFriendRequest(requesterId.id(), requesterId.id()));
+        () -> userService.sendFriendRequest(request));
   }
 
   @Test
@@ -132,8 +132,10 @@ class UserServiceTest {
     when(userRepository.findById(targetId)).thenReturn(Optional.of(target));
 
     // when & then
+    FriendRequestSendingRequest request = new FriendRequestSendingRequest(requesterId.id(),
+        targetId.id());
     assertThrows(RelationAlreadyExistsException.class,
-        () -> userService.sendFriendRequest(requesterId.id(), targetId.id()));
+        () -> userService.sendFriendRequest(request));
   }
 
   @Test
@@ -146,11 +148,11 @@ class UserServiceTest {
     when(userRepository.findById(targetId)).thenReturn(Optional.of(target));
 
     // when & then
+    FriendRequestSendingRequest request = new FriendRequestSendingRequest(requesterId.id(),
+        targetId.id());
     assertThrows(RequestAlreadySentException.class,
-        () -> userService.sendFriendRequest(requesterId.id(), targetId.id()));
+        () -> userService.sendFriendRequest(request));
   }
-
-  // UC2: Accept Friend Request
 
   @Test
   @DisplayName("acceptFriendRequest should establish friendship and remove requests")
@@ -163,7 +165,8 @@ class UserServiceTest {
     when(userRepository.findById(requesterId)).thenReturn(Optional.of(requester));
 
     // when
-    userService.acceptFriendRequest(targetId.id(), requesterId.id());
+    userService.acceptFriendRequest(
+        new FriendRequestAcceptanceRequest(targetId.id(), requesterId.id()));
 
     // then
     assertThat(target.getReceivedFriendRequests()).isEmpty();
@@ -184,11 +187,11 @@ class UserServiceTest {
     when(userRepository.findById(requesterId)).thenReturn(Optional.of(requester));
 
     // when & then
+    FriendRequestAcceptanceRequest request = new FriendRequestAcceptanceRequest(targetId.id(),
+        requesterId.id());
     assertThrows(RequestNotExistsException.class,
-        () -> userService.acceptFriendRequest(targetId.id(), requesterId.id()));
+        () -> userService.acceptFriendRequest(request));
   }
-
-  // UC3: Reject Friend Request
 
   @Test
   @DisplayName("rejectFriendRequest should remove requests and not establish friendship")
@@ -201,7 +204,8 @@ class UserServiceTest {
     when(userRepository.findById(requesterId)).thenReturn(Optional.of(requester));
 
     // when
-    userService.rejectFriendRequest(targetId.id(), requesterId.id());
+    userService.rejectFriendRequest(
+        new FriendRequestRejectionRequest(targetId.id(), requesterId.id()));
 
     // then
     assertThat(target.getReceivedFriendRequests()).isEmpty();
@@ -214,8 +218,6 @@ class UserServiceTest {
     verify(userRepository).save(requester);
   }
 
-  // UC4: Remove Friend
-
   @Test
   @DisplayName("removeFriend should remove users from each others friend lists")
   void removeFriend_shouldRemoveUsersFromEachOthersFriendLists() {
@@ -227,7 +229,7 @@ class UserServiceTest {
     when(userRepository.findById(targetId)).thenReturn(Optional.of(target));
 
     // when
-    userService.removeFriend(requesterId.id(), targetId.id());
+    userService.removeFriend(new FriendRemovalRequest(requesterId.id(), targetId.id()));
 
     // then
     assertThat(requester.getFriends()).doesNotContain(new Friend(targetId));
@@ -237,8 +239,6 @@ class UserServiceTest {
     verify(userRepository).save(target);
   }
 
-  // UC5: Follow User
-
   @Test
   @DisplayName("followUser should add following relation")
   void followUser_shouldAddFollowingRelation() {
@@ -247,7 +247,7 @@ class UserServiceTest {
     when(userRepository.findById(targetId)).thenReturn(Optional.of(target));
 
     // when
-    userService.followUser(requesterId.id(), targetId.id());
+    userService.followUser(new FollowUserRequest(requesterId.id(), targetId.id()));
 
     // then
     assertThat(requester.getFollowedUsers()).extracting(Followed::followedId).contains(targetId);
@@ -260,8 +260,9 @@ class UserServiceTest {
   @Test
   @DisplayName("followUser should throw SelfInteractionException when user tries to follow self")
   void followUser_shouldThrowSelfInteractionExceptionWhenUserTriesToFollowSelf() {
+    FollowUserRequest request = new FollowUserRequest(requesterId.id(), requesterId.id());
     assertThrows(SelfInteractionException.class,
-        () -> userService.followUser(requesterId.id(), requesterId.id()));
+        () -> userService.followUser(request));
   }
 
   @Test
@@ -274,11 +275,10 @@ class UserServiceTest {
     when(userRepository.findById(targetId)).thenReturn(Optional.of(target));
 
     // when & then
+    FollowUserRequest request = new FollowUserRequest(requesterId.id(), targetId.id());
     assertThrows(AlreadyFollowingException.class,
-        () -> userService.followUser(requesterId.id(), targetId.id()));
+        () -> userService.followUser(request));
   }
-
-  // UC6: Unfollow User
 
   @Test
   @DisplayName("unfollowUser should remove following relation")
@@ -291,7 +291,7 @@ class UserServiceTest {
     when(userRepository.findById(targetId)).thenReturn(Optional.of(target));
 
     // when
-    userService.unfollowUser(requesterId.id(), targetId.id());
+    userService.unfollowUser(new UnfollowUserRequest(requesterId.id(), targetId.id()));
 
     // then
     assertThat(requester.getFollowedUsers()).doesNotContain(new Followed(targetId));

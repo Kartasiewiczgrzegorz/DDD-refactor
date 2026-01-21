@@ -4,86 +4,138 @@ import com.grzegorzkartasiewicz.domain.SelfInteractionException;
 import com.grzegorzkartasiewicz.domain.User;
 import com.grzegorzkartasiewicz.domain.UserRepository;
 import com.grzegorzkartasiewicz.domain.vo.UserId;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Application Service for managing social graph interactions. Handles friend requests, friendships,
+ * and following relationships.
+ */
 @RequiredArgsConstructor
 public class UserService {
 
   private final UserRepository userRepository;
 
-  public void sendFriendRequest(UUID requesterId, UUID targetId) {
-    if (requesterId.equals(targetId)) {
-      throw new SelfInteractionException("You can't friend yourself.");
-    }
+  /**
+   * Sends a friend request from one user to another.
+   *
+   * @param request The request containing requester and target IDs.
+   * @throws SelfInteractionException If requesterId equals targetId.
+   * @throws NoSuchElementException   If either user is not found.
+   */
+  public void sendFriendRequest(FriendRequestSendingRequest request) {
+    validateSelfInteraction(request.requesterId(), request.targetId());
 
-    User requester = userRepository.findById(new UserId(requesterId)).orElseThrow();
-    User target = userRepository.findById(new UserId(targetId)).orElseThrow();
+    User requester = findUserOrThrow(request.requesterId());
+    User target = findUserOrThrow(request.targetId());
 
     requester.sendFriendRequest(target.getId());
     target.receiveFriendRequest(requester.getId());
     //TODO sent notification
 
-    userRepository.save(requester);
-    userRepository.save(target);
+    saveUsers(requester, target);
   }
 
-  public void acceptFriendRequest(UUID approverId, UUID requesterId) {
-    User approver = userRepository.findById(new UserId(approverId)).orElseThrow();
-    User requester = userRepository.findById(new UserId(requesterId)).orElseThrow();
+  /**
+   * Accepts a pending friend request.
+   *
+   * @param request The request containing approver and requester IDs.
+   * @throws NoSuchElementException If either user is not found.
+   */
+  public void acceptFriendRequest(FriendRequestAcceptanceRequest request) {
+    User approver = findUserOrThrow(request.approverId());
+    User requester = findUserOrThrow(request.requesterId());
 
     approver.acceptFriendRequest(requester.getId());
     requester.acceptFriendRequestSentByMe(approver.getId());
 
-    userRepository.save(approver);
-    userRepository.save(requester);
+    saveUsers(approver, requester);
   }
 
-  public void rejectFriendRequest(UUID rejectorId, UUID requesterId) {
-    User rejector = userRepository.findById(new UserId(rejectorId)).orElseThrow();
-    User requester = userRepository.findById(new UserId(requesterId)).orElseThrow();
+  /**
+   * Rejects a pending friend request.
+   *
+   * @param request The request containing rejector and requester IDs.
+   * @throws NoSuchElementException If either user is not found.
+   */
+  public void rejectFriendRequest(FriendRequestRejectionRequest request) {
+    User rejector = findUserOrThrow(request.rejectorId());
+    User requester = findUserOrThrow(request.requesterId());
 
     rejector.rejectFriendRequest(requester.getId());
     requester.rejectFriendRequestSentByMe(rejector.getId());
 
-    userRepository.save(rejector);
-    userRepository.save(requester);
+    saveUsers(rejector, requester);
   }
 
-  public void removeFriend(UUID initiatorId, UUID friendId) {
-    User initiator = userRepository.findById(new UserId(initiatorId)).orElseThrow();
-    User friend = userRepository.findById(new UserId(friendId)).orElseThrow();
+  /**
+   * Removes a friend relationship between two users.
+   *
+   * @param request The request containing initiator and friend IDs.
+   * @throws NoSuchElementException If either user is not found.
+   */
+  public void removeFriend(FriendRemovalRequest request) {
+    User initiator = findUserOrThrow(request.initiatorId());
+    User friend = findUserOrThrow(request.friendId());
 
     initiator.removeFriend(friend.getId());
     friend.removeFriend(initiator.getId());
 
-    userRepository.save(initiator);
-    userRepository.save(friend);
+    saveUsers(initiator, friend);
   }
 
-  public void followUser(UUID followerId, UUID followedId) {
-    if (followerId.equals(followedId)) {
-      throw new SelfInteractionException("You can't follow yourself.");
-    }
+  /**
+   * Establishes a following relationship (initiator follows target).
+   *
+   * @param request The request containing follower and followed IDs.
+   * @throws SelfInteractionException If followerId equals followedId.
+   * @throws NoSuchElementException   If either user is not found.
+   */
+  public void followUser(FollowUserRequest request) {
+    validateSelfInteraction(request.followerId(), request.followedId());
 
-    User follower = userRepository.findById(new UserId(followerId)).orElseThrow();
-    User followed = userRepository.findById(new UserId(followedId)).orElseThrow();
+    User follower = findUserOrThrow(request.followerId());
+    User followed = findUserOrThrow(request.followedId());
 
     follower.follow(followed.getId());
     followed.addFollower(follower.getId());
 
-    userRepository.save(follower);
-    userRepository.save(followed);
+    saveUsers(follower, followed);
   }
 
-  public void unfollowUser(UUID followerId, UUID followedId) {
-    User follower = userRepository.findById(new UserId(followerId)).orElseThrow();
-    User followed = userRepository.findById(new UserId(followedId)).orElseThrow();
+  /**
+   * Removes a following relationship.
+   *
+   * @param request The request containing follower and followed IDs.
+   * @throws NoSuchElementException If either user is not found.
+   */
+  public void unfollowUser(UnfollowUserRequest request) {
+    User follower = findUserOrThrow(request.followerId());
+    User followed = findUserOrThrow(request.followedId());
 
     follower.unfollow(followed.getId());
     followed.removeFollower(follower.getId());
 
-    userRepository.save(follower);
-    userRepository.save(followed);
+    saveUsers(follower, followed);
+  }
+
+  private void validateSelfInteraction(UUID id1, UUID id2) {
+    if (id1.equals(id2)) {
+      throw new SelfInteractionException(
+          "Self interaction is not allowed. User cannot perform this action on themselves.");
+    }
+  }
+
+  private User findUserOrThrow(UUID userId) {
+    return userRepository.findById(new UserId(userId))
+        .orElseThrow(
+            () -> new NoSuchElementException(String.format("User with ID %s not found.", userId)));
+  }
+
+  private void saveUsers(User... users) {
+    for (User user : users) {
+      userRepository.save(user);
+    }
   }
 }
