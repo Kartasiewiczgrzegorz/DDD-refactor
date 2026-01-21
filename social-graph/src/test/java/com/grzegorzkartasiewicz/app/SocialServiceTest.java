@@ -2,6 +2,7 @@ package com.grzegorzkartasiewicz.app;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -10,7 +11,7 @@ import com.grzegorzkartasiewicz.domain.RelationAlreadyExistsException;
 import com.grzegorzkartasiewicz.domain.RequestAlreadySentException;
 import com.grzegorzkartasiewicz.domain.RequestNotExistsException;
 import com.grzegorzkartasiewicz.domain.SelfInteractionException;
-import com.grzegorzkartasiewicz.domain.User;
+import com.grzegorzkartasiewicz.domain.SocialUser;
 import com.grzegorzkartasiewicz.domain.UserRepository;
 import com.grzegorzkartasiewicz.domain.vo.Email;
 import com.grzegorzkartasiewicz.domain.vo.Followed;
@@ -20,6 +21,7 @@ import com.grzegorzkartasiewicz.domain.vo.FriendRequest;
 import com.grzegorzkartasiewicz.domain.vo.Name;
 import com.grzegorzkartasiewicz.domain.vo.UserId;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -32,16 +34,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class UserServiceTest {
+class SocialServiceTest {
 
   @Mock
   private UserRepository userRepository;
 
   @InjectMocks
-  private UserService userService;
+  private SocialService socialService;
 
-  private User requester;
-  private User target;
+  private SocialUser requester;
+  private SocialUser target;
   private UserId requesterId;
   private UserId targetId;
 
@@ -53,45 +55,47 @@ class UserServiceTest {
     target = createUser(targetId);
   }
 
-  private User createUser(UserId id) {
-    return new User(id, new Name("Test", "User"), new Email("test@example.com"),
+  private SocialUser createUser(UserId id) {
+    return new SocialUser(id, new Name("Test", "User"), new Email("test@example.com"),
         new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>());
   }
 
-  private User createUserWithFriend(UserId id, UserId friendId) {
+  private SocialUser createUserWithFriend(UserId id, UserId friendId) {
     Set<Friend> friends = new HashSet<>();
     friends.add(new Friend(friendId));
-    return new User(id, new Name("Test", "User"), new Email("test@example.com"),
+    return new SocialUser(id, new Name("Test", "User"), new Email("test@example.com"),
         friends, new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>());
   }
 
-  private User createUserWithSentRequest(UserId id, UserId targetId) {
+  private SocialUser createUserWithSentRequest(UserId id, UserId targetId) {
     Set<FriendRequest> requests = new HashSet<>();
     requests.add(new FriendRequest(targetId));
-    return new User(id, new Name("Test", "User"), new Email("test@example.com"),
+    return new SocialUser(id, new Name("Test", "User"), new Email("test@example.com"),
         new HashSet<>(), new HashSet<>(), new HashSet<>(), requests, new HashSet<>());
   }
 
-  private User createUserWithReceivedRequest(UserId id, UserId requesterId) {
+  private SocialUser createUserWithReceivedRequest(UserId id, UserId requesterId) {
     Set<FriendRequest> requests = new HashSet<>();
     requests.add(new FriendRequest(requesterId));
-    return new User(id, new Name("Test", "User"), new Email("test@example.com"),
+    return new SocialUser(id, new Name("Test", "User"), new Email("test@example.com"),
         new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>(), requests);
   }
 
-  private User createUserFollowing(UserId id, UserId targetId) {
+  private SocialUser createUserFollowing(UserId id, UserId targetId) {
     Set<Followed> followedUsers = new HashSet<>();
     followedUsers.add(new Followed(targetId));
-    return new User(id, new Name("Test", "User"), new Email("test@example.com"),
+    return new SocialUser(id, new Name("Test", "User"), new Email("test@example.com"),
         new HashSet<>(), new HashSet<>(), followedUsers, new HashSet<>(), new HashSet<>());
   }
 
-  private User createUserFollowedBy(UserId id, UserId followerId) {
+  private SocialUser createUserFollowedBy(UserId id, UserId followerId) {
     Set<Follower> followers = new HashSet<>();
     followers.add(new Follower(followerId));
-    return new User(id, new Name("Test", "User"), new Email("test@example.com"),
+    return new SocialUser(id, new Name("Test", "User"), new Email("test@example.com"),
         new HashSet<>(), followers, new HashSet<>(), new HashSet<>(), new HashSet<>());
   }
+
+  // UC1: Send Friend Request
 
   @Test
   @DisplayName("sendFriendRequest should add request to both users when valid")
@@ -101,7 +105,8 @@ class UserServiceTest {
     when(userRepository.findById(targetId)).thenReturn(Optional.of(target));
 
     // when
-    userService.sendFriendRequest(new FriendRequestSendingRequest(requesterId.id(), targetId.id()));
+    socialService.sendFriendRequest(
+        new FriendRequestSendingRequest(requesterId.id(), targetId.id()));
 
     // then
     assertThat(requester.getSentFriendRequests()).extracting(FriendRequest::friendRequestId)
@@ -118,7 +123,7 @@ class UserServiceTest {
     FriendRequestSendingRequest request = new FriendRequestSendingRequest(requesterId.id(),
         requesterId.id());
     assertThrows(SelfInteractionException.class,
-        () -> userService.sendFriendRequest(request));
+        () -> socialService.sendFriendRequest(request));
   }
 
   @Test
@@ -135,7 +140,7 @@ class UserServiceTest {
     FriendRequestSendingRequest request = new FriendRequestSendingRequest(requesterId.id(),
         targetId.id());
     assertThrows(RelationAlreadyExistsException.class,
-        () -> userService.sendFriendRequest(request));
+        () -> socialService.sendFriendRequest(request));
   }
 
   @Test
@@ -151,8 +156,10 @@ class UserServiceTest {
     FriendRequestSendingRequest request = new FriendRequestSendingRequest(requesterId.id(),
         targetId.id());
     assertThrows(RequestAlreadySentException.class,
-        () -> userService.sendFriendRequest(request));
+        () -> socialService.sendFriendRequest(request));
   }
+
+  // UC2: Accept Friend Request
 
   @Test
   @DisplayName("acceptFriendRequest should establish friendship and remove requests")
@@ -165,7 +172,7 @@ class UserServiceTest {
     when(userRepository.findById(requesterId)).thenReturn(Optional.of(requester));
 
     // when
-    userService.acceptFriendRequest(
+    socialService.acceptFriendRequest(
         new FriendRequestAcceptanceRequest(targetId.id(), requesterId.id()));
 
     // then
@@ -190,8 +197,10 @@ class UserServiceTest {
     FriendRequestAcceptanceRequest request = new FriendRequestAcceptanceRequest(targetId.id(),
         requesterId.id());
     assertThrows(RequestNotExistsException.class,
-        () -> userService.acceptFriendRequest(request));
+        () -> socialService.acceptFriendRequest(request));
   }
+
+  // UC3: Reject Friend Request
 
   @Test
   @DisplayName("rejectFriendRequest should remove requests and not establish friendship")
@@ -204,7 +213,7 @@ class UserServiceTest {
     when(userRepository.findById(requesterId)).thenReturn(Optional.of(requester));
 
     // when
-    userService.rejectFriendRequest(
+    socialService.rejectFriendRequest(
         new FriendRequestRejectionRequest(targetId.id(), requesterId.id()));
 
     // then
@@ -218,6 +227,8 @@ class UserServiceTest {
     verify(userRepository).save(requester);
   }
 
+  // UC4: Remove Friend
+
   @Test
   @DisplayName("removeFriend should remove users from each others friend lists")
   void removeFriend_shouldRemoveUsersFromEachOthersFriendLists() {
@@ -229,7 +240,7 @@ class UserServiceTest {
     when(userRepository.findById(targetId)).thenReturn(Optional.of(target));
 
     // when
-    userService.removeFriend(new FriendRemovalRequest(requesterId.id(), targetId.id()));
+    socialService.removeFriend(new FriendRemovalRequest(requesterId.id(), targetId.id()));
 
     // then
     assertThat(requester.getFriends()).doesNotContain(new Friend(targetId));
@@ -239,6 +250,8 @@ class UserServiceTest {
     verify(userRepository).save(target);
   }
 
+  // UC5: Follow User
+
   @Test
   @DisplayName("followUser should add following relation")
   void followUser_shouldAddFollowingRelation() {
@@ -247,7 +260,7 @@ class UserServiceTest {
     when(userRepository.findById(targetId)).thenReturn(Optional.of(target));
 
     // when
-    userService.followUser(new FollowUserRequest(requesterId.id(), targetId.id()));
+    socialService.followUser(new FollowUserRequest(requesterId.id(), targetId.id()));
 
     // then
     assertThat(requester.getFollowedUsers()).extracting(Followed::followedId).contains(targetId);
@@ -262,7 +275,7 @@ class UserServiceTest {
   void followUser_shouldThrowSelfInteractionExceptionWhenUserTriesToFollowSelf() {
     FollowUserRequest request = new FollowUserRequest(requesterId.id(), requesterId.id());
     assertThrows(SelfInteractionException.class,
-        () -> userService.followUser(request));
+        () -> socialService.followUser(request));
   }
 
   @Test
@@ -277,8 +290,10 @@ class UserServiceTest {
     // when & then
     FollowUserRequest request = new FollowUserRequest(requesterId.id(), targetId.id());
     assertThrows(AlreadyFollowingException.class,
-        () -> userService.followUser(request));
+        () -> socialService.followUser(request));
   }
+
+  // UC6: Unfollow User
 
   @Test
   @DisplayName("unfollowUser should remove following relation")
@@ -291,7 +306,7 @@ class UserServiceTest {
     when(userRepository.findById(targetId)).thenReturn(Optional.of(target));
 
     // when
-    userService.unfollowUser(new UnfollowUserRequest(requesterId.id(), targetId.id()));
+    socialService.unfollowUser(new UnfollowUserRequest(requesterId.id(), targetId.id()));
 
     // then
     assertThat(requester.getFollowedUsers()).doesNotContain(new Followed(targetId));
@@ -299,5 +314,37 @@ class UserServiceTest {
 
     verify(userRepository).save(requester);
     verify(userRepository).save(target);
+  }
+
+  @Test
+  @DisplayName("getFriends should return list of friends")
+  void getFriends_shouldReturnListOfFriends() {
+    // given
+    requester = createUserWithFriend(requesterId, targetId);
+    when(userRepository.findById(requesterId)).thenReturn(Optional.of(requester));
+    when(userRepository.findAllByIds(any())).thenReturn(List.of(target));
+
+    // when
+    List<SocialUserResponse> friends = socialService.getFriends(requesterId.id());
+
+    // then
+    assertThat(friends).hasSize(1);
+    assertThat(friends.get(0).id()).isEqualTo(targetId.id());
+  }
+
+  @Test
+  @DisplayName("getFollowers should return list of followers")
+  void getFollowers_shouldReturnListOfFollowers() {
+    // given
+    requester = createUserFollowedBy(requesterId, targetId);
+    when(userRepository.findById(requesterId)).thenReturn(Optional.of(requester));
+    when(userRepository.findAllByIds(any())).thenReturn(List.of(target));
+
+    // when
+    List<SocialUserResponse> followers = socialService.getFollowers(requesterId.id());
+
+    // then
+    assertThat(followers).hasSize(1);
+    assertThat(followers.get(0).id()).isEqualTo(targetId.id());
   }
 }

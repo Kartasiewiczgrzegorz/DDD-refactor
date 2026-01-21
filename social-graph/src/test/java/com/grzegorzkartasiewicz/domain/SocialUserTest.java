@@ -16,9 +16,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-class UserTest {
+class SocialUserTest {
 
-  private User user;
+  private SocialUser socialUser;
   private UserId userId;
   private UserId otherUserId;
 
@@ -26,33 +26,34 @@ class UserTest {
   void setUp() {
     userId = new UserId(UUID.randomUUID());
     otherUserId = new UserId(UUID.randomUUID());
-    user = new User(userId, new Name("John", "Doe"), new Email("john@example.com"),
+    socialUser = new SocialUser(userId, new Name("John", "Doe"), new Email("john@example.com"),
         new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>());
   }
 
   @Test
   @DisplayName("createNew should create user with empty collections")
   void createNew_shouldCreateUserWithEmptyCollections() {
-    User newUser = User.createNew(new Name("Jane", "Doe"), new Email("jane@example.com"));
-    assertThat(newUser.getFriends()).isEmpty();
-    assertThat(newUser.getFollowers()).isEmpty();
-    assertThat(newUser.getFollowedUsers()).isEmpty();
-    assertThat(newUser.getSentFriendRequests()).isEmpty();
-    assertThat(newUser.getReceivedFriendRequests()).isEmpty();
+    SocialUser newSocialUser = SocialUser.createNew(new Name("Jane", "Doe"),
+        new Email("jane@example.com"));
+    assertThat(newSocialUser.getFriends()).isEmpty();
+    assertThat(newSocialUser.getFollowers()).isEmpty();
+    assertThat(newSocialUser.getFollowedUsers()).isEmpty();
+    assertThat(newSocialUser.getSentFriendRequests()).isEmpty();
+    assertThat(newSocialUser.getReceivedFriendRequests()).isEmpty();
   }
 
   @Test
   @DisplayName("sendFriendRequest should add request to sent list")
   void sendFriendRequest_shouldAddRequestToSentList() {
-    user.sendFriendRequest(otherUserId);
-    assertThat(user.getSentFriendRequests()).extracting(FriendRequest::friendRequestId)
+    socialUser.sendFriendRequest(otherUserId);
+    assertThat(socialUser.getSentFriendRequests()).extracting(FriendRequest::friendRequestId)
         .contains(otherUserId);
   }
 
   @Test
   @DisplayName("sendFriendRequest should throw SelfInteractionException when targeting self")
   void sendFriendRequest_shouldThrowSelfInteractionException() {
-    assertThatThrownBy(() -> user.sendFriendRequest(userId))
+    assertThatThrownBy(() -> socialUser.sendFriendRequest(userId))
         .isInstanceOf(SelfInteractionException.class);
   }
 
@@ -60,27 +61,27 @@ class UserTest {
   @DisplayName("sendFriendRequest should throw RelationAlreadyExistsException when already friends")
   void sendFriendRequest_shouldThrowRelationAlreadyExistsException() {
     // given
-    user = new User(userId, new Name("John", "Doe"), new Email("john@example.com"),
+    socialUser = new SocialUser(userId, new Name("John", "Doe"), new Email("john@example.com"),
         new HashSet<>(java.util.List.of(new Friend(otherUserId))),
         new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>());
 
-    assertThatThrownBy(() -> user.sendFriendRequest(otherUserId))
+    assertThatThrownBy(() -> socialUser.sendFriendRequest(otherUserId))
         .isInstanceOf(RelationAlreadyExistsException.class);
   }
 
   @Test
   @DisplayName("sendFriendRequest should throw RequestAlreadySentException when request exists")
   void sendFriendRequest_shouldThrowRequestAlreadySentException() {
-    user.sendFriendRequest(otherUserId);
-    assertThatThrownBy(() -> user.sendFriendRequest(otherUserId))
+    socialUser.sendFriendRequest(otherUserId);
+    assertThatThrownBy(() -> socialUser.sendFriendRequest(otherUserId))
         .isInstanceOf(RequestAlreadySentException.class);
   }
 
   @Test
   @DisplayName("receiveFriendRequest should add to received list")
   void receiveFriendRequest_shouldAddToReceivedList() {
-    user.receiveFriendRequest(otherUserId);
-    assertThat(user.getReceivedFriendRequests()).extracting(FriendRequest::friendRequestId)
+    socialUser.receiveFriendRequest(otherUserId);
+    assertThat(socialUser.getReceivedFriendRequests()).extracting(FriendRequest::friendRequestId)
         .contains(otherUserId);
   }
 
@@ -88,19 +89,19 @@ class UserTest {
   @DisplayName("receiveFriendRequest should throw RelationAlreadyExistsException when already friends")
   void receiveFriendRequest_shouldThrowRelationAlreadyExistsException() {
     // given
-    user = new User(userId, new Name("John", "Doe"), new Email("john@example.com"),
+    socialUser = new SocialUser(userId, new Name("John", "Doe"), new Email("john@example.com"),
         new HashSet<>(java.util.List.of(new Friend(otherUserId))),
         new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>());
 
-    assertThatThrownBy(() -> user.receiveFriendRequest(otherUserId))
+    assertThatThrownBy(() -> socialUser.receiveFriendRequest(otherUserId))
         .isInstanceOf(RelationAlreadyExistsException.class);
   }
 
   @Test
   @DisplayName("receiveFriendRequest should throw RequestAlreadySentException when request exists")
   void receiveFriendRequest_shouldThrowRequestAlreadySentException() {
-    user.sendFriendRequest(otherUserId);
-    assertThatThrownBy(() -> user.receiveFriendRequest(otherUserId))
+    socialUser.sendFriendRequest(otherUserId);
+    assertThatThrownBy(() -> socialUser.receiveFriendRequest(otherUserId))
         .isInstanceOf(RequestAlreadySentException.class);
   }
 
@@ -108,20 +109,20 @@ class UserTest {
   @DisplayName("acceptFriendRequest should add friend and remove received request")
   void acceptFriendRequest_shouldAddFriendAndRemoveRequest() {
     // given
-    user.receiveFriendRequest(otherUserId);
+    socialUser.receiveFriendRequest(otherUserId);
 
     // when
-    user.acceptFriendRequest(otherUserId);
+    socialUser.acceptFriendRequest(otherUserId);
 
     // then
-    assertThat(user.getFriends()).extracting(Friend::friendId).contains(otherUserId);
-    assertThat(user.getReceivedFriendRequests()).isEmpty();
+    assertThat(socialUser.getFriends()).extracting(Friend::friendId).contains(otherUserId);
+    assertThat(socialUser.getReceivedFriendRequests()).isEmpty();
   }
 
   @Test
   @DisplayName("acceptFriendRequest should throw RequestNotExistsException if no request")
   void acceptFriendRequest_shouldThrowRequestNotExistsException() {
-    assertThatThrownBy(() -> user.acceptFriendRequest(otherUserId))
+    assertThatThrownBy(() -> socialUser.acceptFriendRequest(otherUserId))
         .isInstanceOf(RequestNotExistsException.class);
   }
 
@@ -129,88 +130,89 @@ class UserTest {
   @DisplayName("acceptFriendRequestSentByMe should add friend and remove sent request")
   void acceptFriendRequestSentByMe_shouldAddFriendAndRemoveSentRequest() {
     // given
-    user.sendFriendRequest(otherUserId);
+    socialUser.sendFriendRequest(otherUserId);
 
     // when
-    user.acceptFriendRequestSentByMe(otherUserId);
+    socialUser.acceptFriendRequestSentByMe(otherUserId);
 
     // then
-    assertThat(user.getFriends()).extracting(Friend::friendId).contains(otherUserId);
-    assertThat(user.getSentFriendRequests()).isEmpty();
+    assertThat(socialUser.getFriends()).extracting(Friend::friendId).contains(otherUserId);
+    assertThat(socialUser.getSentFriendRequests()).isEmpty();
   }
 
   @Test
   @DisplayName("rejectFriendRequest should remove received request")
   void rejectFriendRequest_shouldRemoveReceivedRequest() {
-    user.receiveFriendRequest(otherUserId);
-    user.rejectFriendRequest(otherUserId);
-    assertThat(user.getReceivedFriendRequests()).isEmpty();
+    socialUser.receiveFriendRequest(otherUserId);
+    socialUser.rejectFriendRequest(otherUserId);
+    assertThat(socialUser.getReceivedFriendRequests()).isEmpty();
   }
 
   @Test
   @DisplayName("rejectFriendRequestSentByMe should remove sent request")
   void rejectFriendRequestSentByMe_shouldRemoveSentRequest() {
-    user.sendFriendRequest(otherUserId);
-    user.rejectFriendRequestSentByMe(otherUserId);
-    assertThat(user.getSentFriendRequests()).isEmpty();
+    socialUser.sendFriendRequest(otherUserId);
+    socialUser.rejectFriendRequestSentByMe(otherUserId);
+    assertThat(socialUser.getSentFriendRequests()).isEmpty();
   }
 
   @Test
   @DisplayName("removeFriend should remove friend from list")
   void removeFriend_shouldRemoveFriend() {
     // given
-    user.receiveFriendRequest(otherUserId);
-    user.acceptFriendRequest(otherUserId);
+    socialUser.receiveFriendRequest(otherUserId);
+    socialUser.acceptFriendRequest(otherUserId);
 
     // when
-    user.removeFriend(otherUserId);
+    socialUser.removeFriend(otherUserId);
 
     // then
-    assertThat(user.getFriends()).isEmpty();
+    assertThat(socialUser.getFriends()).isEmpty();
   }
 
   @Test
   @DisplayName("follow should add to followed users list")
   void follow_shouldAddToFollowedUsersList() {
-    user.follow(otherUserId);
-    assertThat(user.getFollowedUsers()).extracting(Followed::followedId).contains(otherUserId);
+    socialUser.follow(otherUserId);
+    assertThat(socialUser.getFollowedUsers()).extracting(Followed::followedId)
+        .contains(otherUserId);
   }
 
   @Test
   @DisplayName("follow should throw SelfInteractionException")
   void follow_shouldThrowSelfInteractionException() {
-    assertThatThrownBy(() -> user.follow(userId))
+    assertThatThrownBy(() -> socialUser.follow(userId))
         .isInstanceOf(SelfInteractionException.class);
   }
 
   @Test
   @DisplayName("follow should throw AlreadyFollowingException")
   void follow_shouldThrowAlreadyFollowingException() {
-    user.follow(otherUserId);
-    assertThatThrownBy(() -> user.follow(otherUserId))
+    socialUser.follow(otherUserId);
+    assertThatThrownBy(() -> socialUser.follow(otherUserId))
         .isInstanceOf(AlreadyFollowingException.class);
   }
 
   @Test
   @DisplayName("unfollow should remove from followed users list")
   void unfollow_shouldRemoveFromFollowedUsersList() {
-    user.follow(otherUserId);
-    user.unfollow(otherUserId);
-    assertThat(user.getFollowedUsers()).isEmpty();
+    socialUser.follow(otherUserId);
+    socialUser.unfollow(otherUserId);
+    assertThat(socialUser.getFollowedUsers()).isEmpty();
   }
 
   @Test
   @DisplayName("addFollower should add to followers list")
   void addFollower_shouldAddToFollowersList() {
-    user.addFollower(otherUserId);
-    assertThat(user.getFollowers()).extracting(Follower::followerId).contains(otherUserId);
+    socialUser.addFollower(otherUserId);
+    assertThat(socialUser.getFollowers()).extracting(Follower::followerId).contains(otherUserId);
   }
 
   @Test
   @DisplayName("removeFollower should remove from followers list")
   void removeFollower_shouldRemoveFromFollowersList() {
-    user.addFollower(otherUserId);
-    user.removeFollower(otherUserId);
-    assertThat(user.getFollowers()).isEmpty();
+    socialUser.addFollower(otherUserId);
+    socialUser.removeFollower(otherUserId);
+    assertThat(socialUser.getFollowers()).isEmpty();
   }
 }

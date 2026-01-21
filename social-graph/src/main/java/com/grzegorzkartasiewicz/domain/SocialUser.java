@@ -18,7 +18,7 @@ import lombok.Getter;
  * friends (symmetric) and following (asymmetric).
  */
 @AllArgsConstructor
-public class User {
+public class SocialUser {
 
   @Getter
   UserId id;
@@ -49,7 +49,7 @@ public class User {
    */
   private Set<FriendRequest> receivedFriendRequests;
 
-  User(Name name, Email email) {
+  SocialUser(Name name, Email email) {
     this.id = new UserId(null);
     this.name = name;
     this.email = email;
@@ -67,8 +67,8 @@ public class User {
    * @param email The email of the user.
    * @return A new User instance.
    */
-  public static User createNew(Name name, Email email) {
-    return new User(name, email);
+  public static SocialUser createNew(Name name, Email email) {
+    return new SocialUser(name, email);
   }
 
   public Set<Friend> getFriends() {

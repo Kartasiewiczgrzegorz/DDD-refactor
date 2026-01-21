@@ -1,9 +1,12 @@
 package com.grzegorzkartasiewicz.app;
 
 import com.grzegorzkartasiewicz.domain.SelfInteractionException;
-import com.grzegorzkartasiewicz.domain.User;
+import com.grzegorzkartasiewicz.domain.SocialUser;
 import com.grzegorzkartasiewicz.domain.UserRepository;
+import com.grzegorzkartasiewicz.domain.vo.Follower;
+import com.grzegorzkartasiewicz.domain.vo.Friend;
 import com.grzegorzkartasiewicz.domain.vo.UserId;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -13,9 +16,39 @@ import lombok.RequiredArgsConstructor;
  * and following relationships.
  */
 @RequiredArgsConstructor
-public class UserService {
+public class SocialService {
 
   private final UserRepository userRepository;
+
+  /**
+   * Retrieves all friends of a given user.
+   *
+   * @param userId The ID of the user.
+   * @return A list of social user details.
+   * @throws NoSuchElementException If the user is not found.
+   */
+  public List<SocialUserResponse> getFriends(UUID userId) {
+    SocialUser user = findUserOrThrow(userId);
+    List<UserId> friendIds = user.getFriends().stream().map(Friend::friendId).toList();
+    return userRepository.findAllByIds(friendIds).stream()
+        .map(this::mapToResponse)
+        .toList();
+  }
+
+  /**
+   * Retrieves all followers of a given user.
+   *
+   * @param userId The ID of the user.
+   * @return A list of social user details.
+   * @throws NoSuchElementException If the user is not found.
+   */
+  public List<SocialUserResponse> getFollowers(UUID userId) {
+    SocialUser user = findUserOrThrow(userId);
+    List<UserId> followerIds = user.getFollowers().stream().map(Follower::followerId).toList();
+    return userRepository.findAllByIds(followerIds).stream()
+        .map(this::mapToResponse)
+        .toList();
+  }
 
   /**
    * Sends a friend request from one user to another.
@@ -27,8 +60,8 @@ public class UserService {
   public void sendFriendRequest(FriendRequestSendingRequest request) {
     validateSelfInteraction(request.requesterId(), request.targetId());
 
-    User requester = findUserOrThrow(request.requesterId());
-    User target = findUserOrThrow(request.targetId());
+    SocialUser requester = findUserOrThrow(request.requesterId());
+    SocialUser target = findUserOrThrow(request.targetId());
 
     requester.sendFriendRequest(target.getId());
     target.receiveFriendRequest(requester.getId());
@@ -44,8 +77,8 @@ public class UserService {
    * @throws NoSuchElementException If either user is not found.
    */
   public void acceptFriendRequest(FriendRequestAcceptanceRequest request) {
-    User approver = findUserOrThrow(request.approverId());
-    User requester = findUserOrThrow(request.requesterId());
+    SocialUser approver = findUserOrThrow(request.approverId());
+    SocialUser requester = findUserOrThrow(request.requesterId());
 
     approver.acceptFriendRequest(requester.getId());
     requester.acceptFriendRequestSentByMe(approver.getId());
@@ -60,8 +93,8 @@ public class UserService {
    * @throws NoSuchElementException If either user is not found.
    */
   public void rejectFriendRequest(FriendRequestRejectionRequest request) {
-    User rejector = findUserOrThrow(request.rejectorId());
-    User requester = findUserOrThrow(request.requesterId());
+    SocialUser rejector = findUserOrThrow(request.rejectorId());
+    SocialUser requester = findUserOrThrow(request.requesterId());
 
     rejector.rejectFriendRequest(requester.getId());
     requester.rejectFriendRequestSentByMe(rejector.getId());
@@ -76,8 +109,8 @@ public class UserService {
    * @throws NoSuchElementException If either user is not found.
    */
   public void removeFriend(FriendRemovalRequest request) {
-    User initiator = findUserOrThrow(request.initiatorId());
-    User friend = findUserOrThrow(request.friendId());
+    SocialUser initiator = findUserOrThrow(request.initiatorId());
+    SocialUser friend = findUserOrThrow(request.friendId());
 
     initiator.removeFriend(friend.getId());
     friend.removeFriend(initiator.getId());
@@ -95,8 +128,8 @@ public class UserService {
   public void followUser(FollowUserRequest request) {
     validateSelfInteraction(request.followerId(), request.followedId());
 
-    User follower = findUserOrThrow(request.followerId());
-    User followed = findUserOrThrow(request.followedId());
+    SocialUser follower = findUserOrThrow(request.followerId());
+    SocialUser followed = findUserOrThrow(request.followedId());
 
     follower.follow(followed.getId());
     followed.addFollower(follower.getId());
@@ -108,11 +141,11 @@ public class UserService {
    * Removes a following relationship.
    *
    * @param request The request containing follower and followed IDs.
-   * @throws NoSuchElementException If either user is not found.
+   * @throws NoSuchElementException   If either user is not found.
    */
   public void unfollowUser(UnfollowUserRequest request) {
-    User follower = findUserOrThrow(request.followerId());
-    User followed = findUserOrThrow(request.followedId());
+    SocialUser follower = findUserOrThrow(request.followerId());
+    SocialUser followed = findUserOrThrow(request.followedId());
 
     follower.unfollow(followed.getId());
     followed.removeFollower(follower.getId());
@@ -127,15 +160,24 @@ public class UserService {
     }
   }
 
-  private User findUserOrThrow(UUID userId) {
+  private SocialUser findUserOrThrow(UUID userId) {
     return userRepository.findById(new UserId(userId))
         .orElseThrow(
             () -> new NoSuchElementException(String.format("User with ID %s not found.", userId)));
   }
 
-  private void saveUsers(User... users) {
-    for (User user : users) {
-      userRepository.save(user);
+  private void saveUsers(SocialUser... socialUsers) {
+    for (SocialUser socialUser : socialUsers) {
+      userRepository.save(socialUser);
     }
+  }
+
+  private SocialUserResponse mapToResponse(SocialUser user) {
+    return new SocialUserResponse(
+        user.getId().id(),
+        user.getName().name(),
+        user.getName().surname(),
+        user.getEmail().email()
+    );
   }
 }
