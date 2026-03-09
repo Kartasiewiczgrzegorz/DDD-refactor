@@ -17,4 +17,8 @@ public enum NotificationType {
   NotificationType(boolean critical) {
     this.critical = critical;
   }
+
+  boolean isCritical() {
+    return this.critical;
+  }
 }

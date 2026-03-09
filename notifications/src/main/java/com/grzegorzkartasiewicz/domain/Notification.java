@@ -31,14 +31,14 @@ public class Notification {
   }
 
   public void markAsFailed() {
-    if (this.status == NotificationStatus.SENT) {
+    if (this.status != NotificationStatus.PENDING) {
       throw new IllegalStateTransitionException("Cannot FAILED sent notification");
     }
     this.status = NotificationStatus.FAILED;
   }
 
   public void markAsRead() {
-    if (this.status == NotificationStatus.PENDING) {
+    if (this.status != NotificationStatus.SENT) {
       throw new IllegalStateTransitionException("Cannot mark PENDING notification as READ");
     }
     this.status = NotificationStatus.READ;
