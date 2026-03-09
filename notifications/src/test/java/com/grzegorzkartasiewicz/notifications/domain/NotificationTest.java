@@ -110,4 +110,41 @@ class NotificationTest {
     assertThatThrownBy(notification::markAsFailed)
         .isInstanceOf(IllegalStateTransitionException.class);
   }
+
+  @Test
+  @DisplayName("should throw exception when trying to mark as SENT if already FAILED")
+  void shouldNotSendIfFailed() {
+    // given
+    Notification notification = Notification.create(recipientId, type, channel, params);
+    notification.markAsFailed();
+
+    // when & then
+    assertThatThrownBy(notification::markAsSent)
+        .isInstanceOf(IllegalStateTransitionException.class);
+  }
+
+  @Test
+  @DisplayName("should throw exception when trying to mark as SENT if already READ")
+  void shouldNotSendIfRead() {
+    // given
+    Notification notification = Notification.create(recipientId, type, channel, params);
+    notification.markAsSent();
+    notification.markAsRead();
+
+    // when & then
+    assertThatThrownBy(notification::markAsSent)
+        .isInstanceOf(IllegalStateTransitionException.class);
+  }
+
+  @Test
+  @DisplayName("should throw exception when trying to mark as READ if FAILED")
+  void shouldNotReadIfFailed() {
+    // given
+    Notification notification = Notification.create(recipientId, type, channel, params);
+    notification.markAsFailed();
+
+    // when & then
+    assertThatThrownBy(notification::markAsRead)
+        .isInstanceOf(IllegalStateTransitionException.class);
+  }
 }
