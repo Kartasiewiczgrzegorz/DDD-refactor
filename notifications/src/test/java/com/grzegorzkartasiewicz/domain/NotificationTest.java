@@ -1,13 +1,8 @@
-package com.grzegorzkartasiewicz.notifications.domain;
+package com.grzegorzkartasiewicz.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.grzegorzkartasiewicz.domain.Channel;
-import com.grzegorzkartasiewicz.domain.IllegalStateTransitionException;
-import com.grzegorzkartasiewicz.domain.Notification;
-import com.grzegorzkartasiewicz.domain.NotificationStatus;
-import com.grzegorzkartasiewicz.domain.NotificationType;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Assertions;

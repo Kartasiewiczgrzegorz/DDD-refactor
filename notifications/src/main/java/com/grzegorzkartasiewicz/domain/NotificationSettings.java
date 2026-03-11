@@ -6,10 +6,12 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 @AllArgsConstructor
 public class NotificationSettings {
 
+  @Getter
   private final UserId userId;
   private final Set<NotificationSetting> disabledSettings;
 
