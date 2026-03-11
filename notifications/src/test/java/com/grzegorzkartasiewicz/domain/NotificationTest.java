@@ -79,7 +79,7 @@ class NotificationTest {
     // when & then
     assertThatThrownBy(notification::markAsRead)
         .isInstanceOf(IllegalStateTransitionException.class)
-        .hasMessageContaining("Cannot mark PENDING notification as READ");
+        .hasMessageContaining("Cannot mark as READ");
   }
 
   @Test

@@ -12,10 +12,13 @@ import com.grzegorzkartasiewicz.domain.Channel;
 import com.grzegorzkartasiewicz.domain.DomainEventPublisher;
 import com.grzegorzkartasiewicz.domain.Notification;
 import com.grzegorzkartasiewicz.domain.NotificationRepository;
+import com.grzegorzkartasiewicz.domain.NotificationSent;
 import com.grzegorzkartasiewicz.domain.NotificationSettings;
 import com.grzegorzkartasiewicz.domain.NotificationSettingsRepository;
 import com.grzegorzkartasiewicz.domain.NotificationStatus;
 import com.grzegorzkartasiewicz.domain.NotificationType;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -36,6 +39,7 @@ class NotificationServiceTest {
   private final NotificationType type = NotificationType.FRIEND_REQUEST;
   private final Channel channel = Channel.EMAIL;
   private final Map<String, String> params = Map.of("key", "value");
+
   @Mock
   private NotificationRepository notificationRepository;
   @Mock
@@ -43,9 +47,11 @@ class NotificationServiceTest {
   @Mock
   private NotificationSender notificationSender;
   @Mock
-  private DomainEventPublisher domainEventPublisher;
+  private DomainEventPublisher eventPublisher;
+
   @InjectMocks
   private NotificationService notificationService;
+
   @Captor
   private ArgumentCaptor<Notification> notificationCaptor;
   @Captor
@@ -58,7 +64,7 @@ class NotificationServiceTest {
     NotificationSettings settings = NotificationSettings.createDefault(userId);
     when(settingsRepository.findByUserId(userId)).thenReturn(Optional.of(settings));
 
-    java.util.List<NotificationStatus> capturedStatuses = new java.util.ArrayList<>();
+    List<NotificationStatus> capturedStatuses = new ArrayList<>();
     when(notificationRepository.save(any(Notification.class))).thenAnswer(invocation -> {
       Notification n = invocation.getArgument(0);
       capturedStatuses.add(n.getStatus());
@@ -78,7 +84,7 @@ class NotificationServiceTest {
     );
 
     verify(notificationSender).send(any(Notification.class));
-    verify(domainEventPublisher).publish(any(NotificationSent.class));
+    verify(eventPublisher).publish(any(NotificationSent.class));
   }
 
   @Test
@@ -98,7 +104,7 @@ class NotificationServiceTest {
     // then
     verify(notificationSender, never()).send(any());
     verify(notificationRepository, never()).save(any());
-    verify(domainEventPublisher, never()).publish(any());
+    verify(eventPublisher, never()).publish(any());
   }
 
   @Test
@@ -108,7 +114,7 @@ class NotificationServiceTest {
     NotificationSettings settings = NotificationSettings.createDefault(userId);
     when(settingsRepository.findByUserId(userId)).thenReturn(Optional.of(settings));
 
-    java.util.List<NotificationStatus> capturedStatuses = new java.util.ArrayList<>();
+    List<NotificationStatus> capturedStatuses = new ArrayList<>();
     when(notificationRepository.save(any(Notification.class))).thenAnswer(invocation -> {
       Notification n = invocation.getArgument(0);
       capturedStatuses.add(n.getStatus());
@@ -129,7 +135,7 @@ class NotificationServiceTest {
         NotificationStatus.PENDING,
         NotificationStatus.FAILED
     );
-    verify(domainEventPublisher, never()).publish(any(NotificationSent.class));
+    verify(eventPublisher, never()).publish(any(NotificationSent.class));
   }
 
   @Test
@@ -173,7 +179,9 @@ class NotificationServiceTest {
   void markAsRead_shouldMarkNotificationAsRead() {
     // given
     Notification notification = Notification.create(userId, type, channel, params);
+    // Move to SENT first because we cannot mark PENDING as READ
     notification.markAsSent();
+
     when(notificationRepository.findById(notificationId)).thenReturn(Optional.of(notification));
 
     // when
