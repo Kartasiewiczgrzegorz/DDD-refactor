@@ -18,14 +18,14 @@ public class NotificationService {
 
   public void triggerNotification(TriggerNotificationCommand command) {
     NotificationSettings notificationSettings = notificationSettingsRepository.findByUserId(
-        command.userId()).orElseThrow();
+        command.userId()).orElse(NotificationSettings.createDefault(command.userId()));
     if (notificationSettings.canSend(command.type(), command.channel())) {
       Notification notification = Notification.create(command.userId(), command.type(),
           command.channel(), command.params());
       notificationRepository.save(notification);
       try {
         notificationSender.send(notification);
-      } catch (Exception e) {
+      } catch (ExternalSenderException e) {
         notification.markAsFailed();
         notificationRepository.save(notification);
         return;
