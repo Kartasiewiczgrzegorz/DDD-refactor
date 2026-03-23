@@ -1,0 +1,7 @@
+/.gemini/
+.env
+target/
+out/
+build/
+.idea/
+*.class
