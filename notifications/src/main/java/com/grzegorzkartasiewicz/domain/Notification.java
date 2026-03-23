@@ -20,6 +20,7 @@ public class Notification {
   private final UserId recipientId;
   private final NotificationType type;
   private final Channel channel;
+  private final Map<String, String> params;
   private NotificationStatus status;
 
   /**
@@ -32,6 +33,7 @@ public class Notification {
         new UserId(recipientId),
         type,
         channel,
+        params,
         NotificationStatus.PENDING
     );
   }
@@ -41,8 +43,8 @@ public class Notification {
    */
   public static Notification restore(NotificationId id, UserId recipientId,
       NotificationStatus status,
-      NotificationType type, Channel channel) {
-    return new Notification(id, recipientId, type, channel, status);
+      NotificationType type, Channel channel, Map<String, String> params) {
+    return new Notification(id, recipientId, type, channel, params, status);
   }
 
   public void markAsSent() {

@@ -64,6 +64,22 @@
     </dependency>
 
     <dependency>
+      <artifactId>spring-boot-starter-mail</artifactId>
+      <groupId>org.springframework.boot</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>spring-boot-docker-compose</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <artifactId>greenmail-junit5</artifactId>
+      <groupId>com.icegreen</groupId>
+      <scope>test</scope>
+      <version>2.0.1</version>
+    </dependency>
+
+    <dependency>
       <artifactId>h2</artifactId>
       <groupId>com.h2database</groupId>
       <scope>runtime</scope>
