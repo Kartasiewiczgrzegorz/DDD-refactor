@@ -31,13 +31,13 @@ class NotificationController {
         request.params()
     );
     notificationService.triggerNotification(command);
-    return ResponseEntity.ok().build();
+    return ResponseEntity.accepted().build();
   }
 
   @PutMapping("/{id}/read")
   public ResponseEntity<Void> markAsRead(@PathVariable UUID id) {
     notificationService.markAsRead(id);
-    return ResponseEntity.ok().build();
+    return ResponseEntity.noContent().build();
   }
 
   @PutMapping("/settings")
@@ -50,6 +50,6 @@ class NotificationController {
         request.active()
     );
     notificationService.updatePreference(command);
-    return ResponseEntity.ok().build();
+    return ResponseEntity.accepted().build();
   }
 }

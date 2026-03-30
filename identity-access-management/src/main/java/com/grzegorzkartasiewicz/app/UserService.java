@@ -38,6 +38,7 @@ public class UserService {
       validateIfUserExists(userRegistrationRequest.email());
       User signedUser = createUser(userRegistrationRequest);
       //TODO send verification email
+      publisher.publish(new UserEmailVerificationNeededEvent(signedUser.getId()));
 
       Token token = authorizationPort.generateToken(signedUser);
       return mapUserToRegisterResponse(signedUser, token);

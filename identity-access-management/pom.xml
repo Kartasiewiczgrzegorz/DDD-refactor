@@ -94,6 +94,11 @@
       <version>1.2.1</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <artifactId>notifications</artifactId>
+      <groupId>com.grzegorzkartasiewicz</groupId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 
 
