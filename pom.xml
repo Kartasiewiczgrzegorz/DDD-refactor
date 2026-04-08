@@ -27,7 +27,6 @@
     <module>social-graph</module>
     <module>messenger</module>
     <module>notifications</module>
-    <module>legacy</module>
 	</modules>
 
 	<dependencyManagement>

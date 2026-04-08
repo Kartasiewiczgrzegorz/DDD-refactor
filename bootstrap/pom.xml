@@ -14,20 +14,37 @@
     <description>Bootstrap module to package the application</description>
 
     <dependencies>
-        <!-- Główna zależność do modułu adapters, który dostarcza całą funkcjonalność -->
+        <dependency>
+            <artifactId>identity-access-management</artifactId>
+            <groupId>com.grzegorzkartasiewicz</groupId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <artifactId>content-management</artifactId>
+            <groupId>com.grzegorzkartasiewicz</groupId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <artifactId>social-graph</artifactId>
+            <groupId>com.grzegorzkartasiewicz</groupId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <artifactId>messenger</artifactId>
+            <groupId>com.grzegorzkartasiewicz</groupId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
         <dependency>
             <groupId>com.grzegorzkartasiewicz</groupId>
-            <artifactId>legacy</artifactId>
-          <version>0.0.1-SNAPSHOT</version>
+            <artifactId>notifications</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
         </dependency>
 
-        <!-- Spring Boot Starter - potrzebny do uruchomienia aplikacji -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
 
-        <!-- Zależność testowa -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -37,7 +54,6 @@
 
     <build>
         <plugins>
-            <!-- Plugin do budowania wykonywalnego pliku JAR -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
