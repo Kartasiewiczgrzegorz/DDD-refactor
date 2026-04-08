@@ -7,6 +7,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.grzegorzkartasiewicz.domain.AlreadyFollowingException;
+import com.grzegorzkartasiewicz.domain.DomainEventPublisher;
+import com.grzegorzkartasiewicz.domain.FriendRequestSent;
 import com.grzegorzkartasiewicz.domain.RelationAlreadyExistsException;
 import com.grzegorzkartasiewicz.domain.RequestAlreadySentException;
 import com.grzegorzkartasiewicz.domain.RequestNotExistsException;
@@ -38,6 +40,9 @@ class SocialServiceTest {
 
   @Mock
   private UserRepository userRepository;
+
+  @Mock
+  private DomainEventPublisher eventPublisher;
 
   @InjectMocks
   private SocialService socialService;
@@ -115,6 +120,7 @@ class SocialServiceTest {
         .contains(requesterId);
     verify(userRepository).save(requester);
     verify(userRepository).save(target);
+    verify(eventPublisher).publish(new FriendRequestSent(requesterId, targetId));
   }
 
   @Test

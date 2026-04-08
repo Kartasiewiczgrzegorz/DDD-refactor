@@ -37,7 +37,7 @@ public class UserService {
     try {
       validateIfUserExists(userRegistrationRequest.email());
       User signedUser = createUser(userRegistrationRequest);
-      //TODO send verification email
+
       publisher.publish(new UserEmailVerificationNeededEvent(signedUser.getId()));
 
       Token token = authorizationPort.generateToken(signedUser);
@@ -83,7 +83,6 @@ public class UserService {
     try {
       User user = findUserByEmailOrThrow(resetPasswordRequest.email());
 
-      //TODO send reset password email
       ResetPasswordEvent resetPasswordEvent = new ResetPasswordEvent(user.getId(),
           resetPasswordRequest.password());
       publisher.publish(resetPasswordEvent);

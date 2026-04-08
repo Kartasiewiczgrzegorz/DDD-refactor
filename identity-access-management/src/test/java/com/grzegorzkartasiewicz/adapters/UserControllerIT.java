@@ -6,15 +6,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.grzegorzkartasiewicz.api.NotificationFacade;
+import com.grzegorzkartasiewicz.app.ConfirmResetPasswordRequest;
+import com.grzegorzkartasiewicz.app.RegisteredUser;
 import com.grzegorzkartasiewicz.app.ResetPasswordRequest;
+import com.grzegorzkartasiewicz.app.UserEmailVerificationRequest;
 import com.grzegorzkartasiewicz.app.UserLogInRequest;
 import com.grzegorzkartasiewicz.app.UserRegistrationRequest;
 import com.grzegorzkartasiewicz.app.UserService;
+import com.grzegorzkartasiewicz.domain.vo.Verification;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
+@Import(TestConfig.class)
 class UserControllerIT {
 
   @Autowired
@@ -32,6 +41,9 @@ class UserControllerIT {
 
   @Autowired
   private UserService userService;
+
+  @MockBean
+  private NotificationFacade notificationFacade;
 
   @Test
   @DisplayName("should register user and return 201 Created for valid data")
@@ -71,8 +83,8 @@ class UserControllerIT {
   }
 
   @Test
-  @DisplayName("should return 401 Unauthorized when registration data is invalid (e.g., weak password)")
-  void registerUser_whenInvalidPassword_shouldReturnUnauthorized() throws Exception {
+  @DisplayName("should return 400 Bad Request when registration data is invalid (e.g., weak password)")
+  void registerUser_whenInvalidPassword_shouldReturnBadRequest() throws Exception {
     // given
     UserRegistrationRequest request = new UserRegistrationRequest("Jane", "Doe",
         "jane.doe@example.com", "weak");
@@ -172,38 +184,65 @@ class UserControllerIT {
   }
 
   @Test
-  @DisplayName("should reset password and allow login with new password")
-  void resetPassword_shouldReturnOk_andAllowLoginWithNewPassword() throws Exception {
+  @DisplayName("should request password reset and allow login only after confirmation")
+  void resetPassword_shouldRequireConfirmation() throws Exception {
     // given
     String email = "reset.password@example.com";
     String oldPassword = "OldPassword123!";
     String newPassword = "NewPassword456!";
-    UserRegistrationRequest registrationRequest = new UserRegistrationRequest("Reset", "Password",
-        email, oldPassword);
-    userService.signUp(registrationRequest);
+    RegisteredUser registeredUser = userService.signUp(
+        new UserRegistrationRequest("Reset", "Password",
+            email, oldPassword));
+    UUID userId = registeredUser.id();
 
-    // when
+    // when: request reset
     ResetPasswordRequest resetRequest = new ResetPasswordRequest(email, newPassword);
     mockMvc.perform(post("/users/reset-password")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(resetRequest)))
         .andExpect(status().isOk());
 
-    // then
+    // then: login with new password should STILL FAIL because it's not confirmed
     UserLogInRequest loginWithNewPasswordRequest = new UserLogInRequest(email,
         newPassword);
     mockMvc.perform(post("/users/login")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(loginWithNewPasswordRequest)))
+        .andExpect(status().isUnauthorized());
+
+    // when: confirm reset
+    ConfirmResetPasswordRequest confirmRequest = new ConfirmResetPasswordRequest(userId,
+        newPassword);
+    mockMvc.perform(post("/users/reset-password/confirm")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(confirmRequest)))
         .andExpect(status().isOk());
 
-    // and
-    UserLogInRequest loginWithOldPasswordRequest = new UserLogInRequest(email,
-        oldPassword);
+    // then: login with new password should succeed
     mockMvc.perform(post("/users/login")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(objectMapper.writeValueAsString(loginWithOldPasswordRequest)))
-        .andExpect(status().isUnauthorized());
+            .content(objectMapper.writeValueAsString(loginWithNewPasswordRequest)))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  @DisplayName("should verify user account")
+  void verifyUser_shouldUpdateVerificationStatus() throws Exception {
+    // given
+    String email = "verify@example.com";
+    RegisteredUser registeredUser = userService.signUp(new UserRegistrationRequest("Verify", "Me",
+        email, "Password123!"));
+    UUID userId = registeredUser.id();
+
+    // when
+    UserEmailVerificationRequest verifyRequest = new UserEmailVerificationRequest(userId,
+        Verification.VERIFIED);
+    mockMvc.perform(post("/users/verify")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(verifyRequest)))
+        .andExpect(status().isOk());
+
+    // note: currently login doesn't check verification, but we've tested the endpoint exists and calls service
   }
 
   @Test

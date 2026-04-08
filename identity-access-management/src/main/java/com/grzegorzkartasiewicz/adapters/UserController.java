@@ -1,11 +1,14 @@
 package com.grzegorzkartasiewicz.adapters;
 
+import com.grzegorzkartasiewicz.app.ConfirmResetPasswordRequest;
 import com.grzegorzkartasiewicz.app.LoggedUser;
 import com.grzegorzkartasiewicz.app.RegisteredUser;
 import com.grzegorzkartasiewicz.app.ResetPasswordRequest;
+import com.grzegorzkartasiewicz.app.UserEmailVerificationRequest;
 import com.grzegorzkartasiewicz.app.UserLogInRequest;
 import com.grzegorzkartasiewicz.app.UserRegistrationRequest;
 import com.grzegorzkartasiewicz.app.UserService;
+import com.grzegorzkartasiewicz.domain.vo.UserId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -63,6 +66,34 @@ class UserController {
   @PostMapping("/reset-password")
   ResponseEntity<Void> resetPassword(@RequestBody ResetPasswordRequest resetPasswordRequest) {
     userService.requestResetPassword(resetPasswordRequest);
+    return ResponseEntity.ok().build();
+  }
+
+  @Operation(summary = "Confirm a password reset",
+      description = "Resets the user's password based on the provided data. This endpoint should be called after a user has confirmed the reset request.",
+      responses = {
+          @ApiResponse(responseCode = "200", description = "Password reset successful."),
+          @ApiResponse(responseCode = "401", description = "Invalid credentials.")
+      })
+  @PostMapping("/reset-password/confirm")
+  ResponseEntity<Void> confirmResetPassword(
+      @RequestBody ConfirmResetPasswordRequest confirmResetPasswordRequest) {
+    userService.resetPassword(new UserId(confirmResetPasswordRequest.userId()),
+        confirmResetPasswordRequest.newPassword());
+    return ResponseEntity.ok().build();
+  }
+
+  @Operation(summary = "Verify a user email",
+      description = "Verifies a user's account or handles an unverified account.",
+      responses = {
+          @ApiResponse(responseCode = "200", description = "User verification status updated."),
+          @ApiResponse(responseCode = "401", description = "Invalid credentials.")
+      })
+  @PostMapping("/verify")
+  ResponseEntity<Void> verifyUser(
+      @RequestBody UserEmailVerificationRequest userEmailVerificationRequest) {
+    userService.verifyUser(new UserId(userEmailVerificationRequest.userId()),
+        userEmailVerificationRequest.verification());
     return ResponseEntity.ok().build();
   }
 }

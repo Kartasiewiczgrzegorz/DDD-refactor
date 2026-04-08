@@ -10,6 +10,8 @@ import com.grzegorzkartasiewicz.domain.Comment;
 import com.grzegorzkartasiewicz.domain.CommentNotExists;
 import com.grzegorzkartasiewicz.domain.DomainEventPublisher;
 import com.grzegorzkartasiewicz.domain.Post;
+import com.grzegorzkartasiewicz.domain.PostAction;
+import com.grzegorzkartasiewicz.domain.PostChangedEvent;
 import com.grzegorzkartasiewicz.domain.PostRepository;
 import com.grzegorzkartasiewicz.domain.UnauthorizedToEditException;
 import com.grzegorzkartasiewicz.domain.ValidationException;
@@ -383,6 +385,38 @@ class PostServiceTest {
 
     assertThrows(CommentNotExists.class,
         () -> postService.removeComment(commentDeleteRequest));
+  }
+
+  @Test
+  @DisplayName("like post should increase like count and publish PostChangedEvent")
+  void likePost_shouldIncreaseLikeCountAndPublishEvent() {
+    when(postRepository.findPostById(testPost.getId())).thenReturn(Optional.ofNullable(testPost));
+    UUID likerId = UUID.randomUUID();
+
+    postService.likePost(testPost.getId().id(), likerId);
+
+    verify(domainEventPublisher).publish(org.mockito.ArgumentMatchers.argThat(event ->
+        event instanceof PostChangedEvent pce &&
+            pce.action() == PostAction.POST_LIKED &&
+            pce.recipientId().equals(testPost.getAuthorId()) &&
+            pce.actorId().id().equals(likerId)
+    ));
+  }
+
+  @Test
+  @DisplayName("like comment should increase comment like count and publish PostChangedEvent")
+  void likeComment_shouldIncreaseCommentLikeCountAndPublishEvent() {
+    when(postRepository.findPostById(testPost.getId())).thenReturn(Optional.ofNullable(testPost));
+    UUID likerId = UUID.randomUUID();
+
+    postService.likeComment(testPost.getId().id(), testComment.getId().id(), likerId);
+
+    verify(domainEventPublisher).publish(org.mockito.ArgumentMatchers.argThat(event ->
+        event instanceof PostChangedEvent pce &&
+            pce.action() == PostAction.COMMENT_LIKED &&
+            pce.recipientId().equals(testComment.getAuthorId()) &&
+            pce.actorId().id().equals(likerId)
+    ));
   }
 
   @Test

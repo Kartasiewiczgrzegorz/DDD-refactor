@@ -1,5 +1,7 @@
 package com.grzegorzkartasiewicz.app;
 
+import com.grzegorzkartasiewicz.domain.DomainEventPublisher;
+import com.grzegorzkartasiewicz.domain.FriendRequestSent;
 import com.grzegorzkartasiewicz.domain.SelfInteractionException;
 import com.grzegorzkartasiewicz.domain.SocialUser;
 import com.grzegorzkartasiewicz.domain.UserRepository;
@@ -19,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 public class SocialService {
 
   private final UserRepository userRepository;
+  private final DomainEventPublisher eventPublisher;
 
   /**
    * Retrieves all friends of a given user.
@@ -65,7 +68,8 @@ public class SocialService {
 
     requester.sendFriendRequest(target.getId());
     target.receiveFriendRequest(requester.getId());
-    //TODO sent notification
+
+    eventPublisher.publish(new FriendRequestSent(requester.getId(), target.getId()));
 
     saveUsers(requester, target);
   }

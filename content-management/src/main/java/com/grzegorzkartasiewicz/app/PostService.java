@@ -2,9 +2,12 @@ package com.grzegorzkartasiewicz.app;
 
 import com.grzegorzkartasiewicz.domain.Comment;
 import com.grzegorzkartasiewicz.domain.CommentLiked;
+import com.grzegorzkartasiewicz.domain.CommentNotExists;
 import com.grzegorzkartasiewicz.domain.CommentUnliked;
 import com.grzegorzkartasiewicz.domain.DomainEventPublisher;
 import com.grzegorzkartasiewicz.domain.Post;
+import com.grzegorzkartasiewicz.domain.PostAction;
+import com.grzegorzkartasiewicz.domain.PostChangedEvent;
 import com.grzegorzkartasiewicz.domain.PostLiked;
 import com.grzegorzkartasiewicz.domain.PostRepository;
 import com.grzegorzkartasiewicz.domain.PostUnliked;
@@ -13,6 +16,7 @@ import com.grzegorzkartasiewicz.domain.vo.CommentId;
 import com.grzegorzkartasiewicz.domain.vo.Description;
 import com.grzegorzkartasiewicz.domain.vo.PostId;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,8 +46,6 @@ public class PostService {
     Post postToAdd = Post.createNew(description, authorId);
     Post addedPost = postRepository.save(postToAdd);
 
-    handlePostChangeNotification(addedPost);
-
     return getPostResponse(addedPost);
   }
 
@@ -62,7 +64,7 @@ public class PostService {
 
     Post editedPost = postRepository.save(postToEdit);
 
-    handlePostChangeNotification(editedPost);
+    handlePostChangeNotification(editedPost, PostAction.POST_EDITED, authorId, null);
 
     return getPostResponse(editedPost);
   }
@@ -78,8 +80,6 @@ public class PostService {
 
     postToDelete.validatePostAuthor(authorId);
     postRepository.delete(postToDelete);
-
-    handlePostChangeNotification(postToDelete);
   }
 
   /**
@@ -97,8 +97,6 @@ public class PostService {
 
     Post editedPost = postRepository.save(postToEdit);
 
-    handlePostChangeNotification(editedPost);
-
     return getPostResponse(editedPost);
   }
 
@@ -111,13 +109,14 @@ public class PostService {
   public PostResponse editComment(CommentUpdateRequest commentUpdateRequest) {
     Description description = new Description(commentUpdateRequest.description());
     AuthorId authorId = new AuthorId(commentUpdateRequest.authorId());
+    CommentId commentId = new CommentId(commentUpdateRequest.commentId());
 
     Post postToEdit = findPostOrThrow(commentUpdateRequest.postId());
-    postToEdit.editComment(new CommentId(commentUpdateRequest.commentId()), description, authorId);
+    postToEdit.editComment(commentId, description, authorId);
 
     Post editedPost = postRepository.save(postToEdit);
 
-    handlePostChangeNotification(editedPost);
+    handlePostChangeNotification(editedPost, PostAction.COMMENT_EDITED, authorId, commentId);
 
     return getPostResponse(editedPost);
   }
@@ -133,9 +132,7 @@ public class PostService {
 
     postToEdit.removeComment(new CommentId(commentDeleteRequest.commentId()), authorId);
 
-    Post editedPost = postRepository.save(postToEdit);
-
-    handlePostChangeNotification(editedPost);
+    postRepository.save(postToEdit);
   }
 
   /**
@@ -149,9 +146,10 @@ public class PostService {
     Post postToLike = findPostOrThrow(postId);
     postToLike.increaseLikes();
 
-    eventPublisher.publish(new PostLiked(postToLike.getId(), new AuthorId(authorId)));
+    AuthorId actorId = new AuthorId(authorId);
+    eventPublisher.publish(new PostLiked(postToLike.getId(), actorId));
 
-    handlePostChangeNotification(postToLike);
+    handlePostChangeNotification(postToLike, PostAction.POST_LIKED, actorId, null);
 
     return getPostResponse(postToLike);
   }
@@ -167,9 +165,10 @@ public class PostService {
     Post postToUnlike = findPostOrThrow(postId);
     postToUnlike.decreaseLikes();
 
-    eventPublisher.publish(new PostUnliked(postToUnlike.getId(), new AuthorId(authorId)));
+    AuthorId actorId = new AuthorId(authorId);
+    eventPublisher.publish(new PostUnliked(postToUnlike.getId(), actorId));
 
-    handlePostChangeNotification(postToUnlike);
+    handlePostChangeNotification(postToUnlike, PostAction.POST_UNLIKED, actorId, null);
 
     return getPostResponse(postToUnlike);
   }
@@ -188,9 +187,10 @@ public class PostService {
 
     postToEdit.increaseLikesInComment(cId);
 
-    eventPublisher.publish(new CommentLiked(postToEdit.getId(), cId, new AuthorId(authorId)));
+    AuthorId actorId = new AuthorId(authorId);
+    eventPublisher.publish(new CommentLiked(postToEdit.getId(), cId, actorId));
 
-    handlePostChangeNotification(postToEdit);
+    handlePostChangeNotification(postToEdit, PostAction.COMMENT_LIKED, actorId, cId);
 
     return getPostResponse(postToEdit);
   }
@@ -209,9 +209,10 @@ public class PostService {
 
     postToEdit.decreaseLikesInComment(cId);
 
-    eventPublisher.publish(new CommentUnliked(postToEdit.getId(), cId, new AuthorId(authorId)));
+    AuthorId actorId = new AuthorId(authorId);
+    eventPublisher.publish(new CommentUnliked(postToEdit.getId(), cId, actorId));
 
-    handlePostChangeNotification(postToEdit);
+    handlePostChangeNotification(postToEdit, PostAction.COMMENT_UNLIKED, actorId, cId);
 
     return getPostResponse(postToEdit);
   }
@@ -228,9 +229,33 @@ public class PostService {
         .toList();
   }
 
-  private void handlePostChangeNotification(Post post) {
-    //TODO: Replace with actual notification logic, e.g., publish domain event or send email
-    log.info("Notification: Post or its comment changed: {}", post.getId().id());
+  private void handlePostChangeNotification(Post post, PostAction action, AuthorId actorId,
+      CommentId commentId) {
+    AuthorId recipientId = determineRecipient(post, action, commentId);
+
+    if (recipientId.equals(actorId)) {
+      return; // Skip notifying yourself
+    }
+
+    eventPublisher.publish(new PostChangedEvent(
+        post.getId(),
+        Optional.ofNullable(commentId),
+        actorId,
+        recipientId,
+        action
+    ));
+  }
+
+  private AuthorId determineRecipient(Post post, PostAction action, CommentId commentId) {
+    if (action == PostAction.COMMENT_LIKED || action == PostAction.COMMENT_UNLIKED
+        || action == PostAction.COMMENT_EDITED) {
+      return post.getComments().stream()
+          .filter(c -> c.getId().equals(commentId))
+          .map(Comment::getAuthorId)
+          .findFirst()
+          .orElseThrow(() -> new CommentNotExists("Recipient comment not found"));
+    }
+    return post.getAuthorId();
   }
 
   private PostResponse getPostResponse(Post post) {
