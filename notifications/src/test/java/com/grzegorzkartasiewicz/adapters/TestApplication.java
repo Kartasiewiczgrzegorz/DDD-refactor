@@ -1,6 +1,9 @@
 package com.grzegorzkartasiewicz.adapters;
 
+import com.grzegorzkartasiewicz.app.SocialGraphPort;
+import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
 
 /**
  * Spring Boot test configuration class. This class is necessary for slice tests (such as
@@ -12,4 +15,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class TestApplication {
 
+  @Bean
+  public SocialGraphPort socialGraphPort() {
+    return Mockito.mock(SocialGraphPort.class);
+  }
 }

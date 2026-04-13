@@ -2,6 +2,7 @@ package com.grzegorzkartasiewicz.adapters;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.grzegorzkartasiewicz.app.SocialGraphPort;
 import com.grzegorzkartasiewicz.domain.Channel;
 import com.grzegorzkartasiewicz.domain.Notification;
 import com.grzegorzkartasiewicz.domain.NotificationType;
@@ -16,15 +17,24 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-@SpringBootTest(properties = {
+@SpringBootTest(classes = {
+    SmtpNotificationSender.class,
+    org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration.class
+}, properties = {
     "spring.mail.host=localhost",
     "spring.mail.port=3025",
     "spring.mail.username=test",
     "spring.mail.password=test",
-    "spring.docker.compose.enabled=false"
+    "spring.docker.compose.enabled=false",
+    "jwt.secret=thisisaverysecuresecretkeyforjwttesting123456",
+    "jwt.expiration.ms=86400000"
 })
 class SmtpNotificationSenderTest {
+
+  @MockitoBean
+  private SocialGraphPort socialGraphPort;
 
   @RegisterExtension
   static GreenMailExtension greenMail = new GreenMailExtension(ServerSetupTest.SMTP)

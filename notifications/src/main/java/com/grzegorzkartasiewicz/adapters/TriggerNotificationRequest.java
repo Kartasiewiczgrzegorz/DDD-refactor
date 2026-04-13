@@ -7,10 +7,10 @@ import java.util.Map;
 import java.util.UUID;
 
 public record TriggerNotificationRequest(
-    @NotNull UUID userId,
+    @NotNull UUID actorId,
+    UUID targetId,
     @NotNull NotificationType type,
     @NotNull Channel channel,
     Map<String, String> params
 ) {
-
 }

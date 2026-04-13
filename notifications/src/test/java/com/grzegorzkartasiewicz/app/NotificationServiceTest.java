@@ -35,6 +35,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class NotificationServiceTest {
 
   private final UUID userId = UUID.randomUUID();
+  private final UUID targetId = UUID.randomUUID();
   private final UUID notificationId = UUID.randomUUID();
   private final NotificationType type = NotificationType.FRIEND_REQUEST;
   private final Channel channel = Channel.EMAIL;
@@ -61,8 +62,8 @@ class NotificationServiceTest {
   @DisplayName("triggerNotification should send notification successfully when allowed by settings")
   void triggerNotification_shouldSendNotificationSuccessfullyWhenAllowedBySettings() {
     // given
-    NotificationSettings settings = NotificationSettings.createDefault(userId);
-    when(settingsRepository.findByUserId(userId)).thenReturn(Optional.of(settings));
+    NotificationSettings settings = NotificationSettings.createDefault(targetId);
+    when(settingsRepository.findByUserId(targetId)).thenReturn(Optional.of(settings));
 
     List<NotificationStatus> capturedStatuses = new ArrayList<>();
     when(notificationRepository.save(any(Notification.class))).thenAnswer(invocation -> {
@@ -71,7 +72,8 @@ class NotificationServiceTest {
       return n;
     });
 
-    TriggerNotificationCommand command = new TriggerNotificationCommand(userId, type, channel,
+    TriggerNotificationCommand command = new TriggerNotificationCommand(userId, targetId, type,
+        channel,
         params);
 
     // when
@@ -91,11 +93,12 @@ class NotificationServiceTest {
   @DisplayName("triggerNotification should abort sending if user opted out")
   void triggerNotification_shouldAbortWhenUserOptedOut() {
     // given
-    NotificationSettings settings = NotificationSettings.createDefault(userId);
+    NotificationSettings settings = NotificationSettings.createDefault(targetId);
     settings.updatePreference(type, channel, false); // Opt-out
-    when(settingsRepository.findByUserId(userId)).thenReturn(Optional.of(settings));
+    when(settingsRepository.findByUserId(targetId)).thenReturn(Optional.of(settings));
 
-    TriggerNotificationCommand command = new TriggerNotificationCommand(userId, type, channel,
+    TriggerNotificationCommand command = new TriggerNotificationCommand(userId, targetId, type,
+        channel,
         params);
 
     // when
@@ -111,8 +114,8 @@ class NotificationServiceTest {
   @DisplayName("triggerNotification should mark as FAILED when infrastructure adapter throws exception")
   void triggerNotification_shouldMarkAsFailedOnInfrastructureError() {
     // given
-    NotificationSettings settings = NotificationSettings.createDefault(userId);
-    when(settingsRepository.findByUserId(userId)).thenReturn(Optional.of(settings));
+    NotificationSettings settings = NotificationSettings.createDefault(targetId);
+    when(settingsRepository.findByUserId(targetId)).thenReturn(Optional.of(settings));
 
     List<NotificationStatus> capturedStatuses = new ArrayList<>();
     when(notificationRepository.save(any(Notification.class))).thenAnswer(invocation -> {
@@ -124,7 +127,8 @@ class NotificationServiceTest {
     doThrow(new ExternalSenderException("Connection timeout"))
         .when(notificationSender).send(any(Notification.class));
 
-    TriggerNotificationCommand command = new TriggerNotificationCommand(userId, type, channel,
+    TriggerNotificationCommand command = new TriggerNotificationCommand(userId, targetId, type,
+        channel,
         params);
 
     // when
@@ -142,10 +146,10 @@ class NotificationServiceTest {
   @DisplayName("updatePreference should update notification preference and save settings")
   void updatePreference_shouldUpdateNotificationPreferenceAndSaveSettings() {
     // given
-    NotificationSettings settings = NotificationSettings.createDefault(userId);
-    when(settingsRepository.findByUserId(userId)).thenReturn(Optional.of(settings));
+    NotificationSettings settings = NotificationSettings.createDefault(targetId);
+    when(settingsRepository.findByUserId(targetId)).thenReturn(Optional.of(settings));
 
-    UpdatePreferenceCommand command = new UpdatePreferenceCommand(userId, type, channel, false);
+    UpdatePreferenceCommand command = new UpdatePreferenceCommand(targetId, type, channel, false);
 
     // when
     notificationService.updatePreference(command);
@@ -160,9 +164,9 @@ class NotificationServiceTest {
   @DisplayName("updatePreference should create default settings if none exists when updating preference")
   void updatePreference_shouldCreateDefaultSettingsIfNoneExists() {
     // given
-    when(settingsRepository.findByUserId(userId)).thenReturn(Optional.empty());
+    when(settingsRepository.findByUserId(targetId)).thenReturn(Optional.empty());
 
-    UpdatePreferenceCommand command = new UpdatePreferenceCommand(userId, type, channel, false);
+    UpdatePreferenceCommand command = new UpdatePreferenceCommand(targetId, type, channel, false);
 
     // when
     notificationService.updatePreference(command);
@@ -170,7 +174,7 @@ class NotificationServiceTest {
     // then
     verify(settingsRepository).save(settingsCaptor.capture());
     NotificationSettings savedSettings = settingsCaptor.getValue();
-    assertThat(savedSettings.getUserId().id()).isEqualTo(userId);
+    assertThat(savedSettings.getUserId().id()).isEqualTo(targetId);
     assertThat(savedSettings.canSend(type, channel)).isFalse();
   }
 

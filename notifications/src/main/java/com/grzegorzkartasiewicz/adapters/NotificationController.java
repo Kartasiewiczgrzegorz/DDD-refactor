@@ -25,13 +25,14 @@ class NotificationController {
   public ResponseEntity<Void> triggerNotification(
       @RequestBody @Valid TriggerNotificationRequest request) {
     TriggerNotificationCommand command = new TriggerNotificationCommand(
-        request.userId(),
+        request.actorId(),
+        request.targetId(),
         request.type(),
         request.channel(),
         request.params()
     );
     notificationService.triggerNotification(command);
-    return ResponseEntity.accepted().build();
+    return ResponseEntity.ok().build();
   }
 
   @PutMapping("/{id}/read")

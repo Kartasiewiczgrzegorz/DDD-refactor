@@ -46,14 +46,13 @@ public class PostService {
     Post postToAdd = Post.createNew(description, authorId);
     Post addedPost = postRepository.save(postToAdd);
 
+    handlePostChangeNotification(addedPost, PostAction.POST_CREATED, authorId, null);
+
     return getPostResponse(addedPost);
   }
 
   /**
    * Updates an existing post's description.
-   *
-   * @param postUpdateRequest Request data containing post ID, new description, and author ID.
-   * @return The updated post details.
    */
   public PostResponse updatePost(PostUpdateRequest postUpdateRequest) {
     Description description = new Description(postUpdateRequest.description());
@@ -71,8 +70,6 @@ public class PostService {
 
   /**
    * Deletes a post.
-   *
-   * @param postDeleteRequest Request data containing post ID and author ID.
    */
   public void deletePost(PostDeleteRequest postDeleteRequest) {
     AuthorId authorId = new AuthorId(postDeleteRequest.authorId());
@@ -84,9 +81,6 @@ public class PostService {
 
   /**
    * Adds a comment to a post.
-   *
-   * @param commentCreationRequest Request data containing post ID, description, and author ID.
-   * @return The updated post details including the new comment.
    */
   public PostResponse addComment(CommentCreationRequest commentCreationRequest) {
     Description description = new Description(commentCreationRequest.description());
@@ -102,9 +96,6 @@ public class PostService {
 
   /**
    * Edits an existing comment.
-   *
-   * @param commentUpdateRequest Request data containing post ID, comment ID, new description, and author ID.
-   * @return The updated post details.
    */
   public PostResponse editComment(CommentUpdateRequest commentUpdateRequest) {
     Description description = new Description(commentUpdateRequest.description());
@@ -123,8 +114,6 @@ public class PostService {
 
   /**
    * Removes a comment from a post.
-   *
-   * @param commentDeleteRequest Request data containing post ID, comment ID, and author ID.
    */
   public void removeComment(CommentDeleteRequest commentDeleteRequest) {
     AuthorId authorId = new AuthorId(commentDeleteRequest.authorId());
@@ -137,10 +126,6 @@ public class PostService {
 
   /**
    * Likes a post optimistically.
-   *
-   * @param postId The ID of the post to like.
-   * @param authorId The ID of the user liking the post.
-   * @return The post details with the optimistically incremented like count.
    */
   public PostResponse likePost(UUID postId, UUID authorId) {
     Post postToLike = findPostOrThrow(postId);
@@ -156,10 +141,6 @@ public class PostService {
 
   /**
    * Unlikes a post optimistically.
-   *
-   * @param postId The ID of the post to unlike.
-   * @param authorId The ID of the user unliking the post.
-   * @return The post details with the optimistically decremented like count.
    */
   public PostResponse unlikePost(UUID postId, UUID authorId) {
     Post postToUnlike = findPostOrThrow(postId);
@@ -175,11 +156,6 @@ public class PostService {
 
   /**
    * Likes a comment optimistically.
-   *
-   * @param postId The ID of the post containing the comment.
-   * @param commentId The ID of the comment to like.
-   * @param authorId The ID of the user liking the comment.
-   * @return The post details with the optimistically incremented comment like count.
    */
   public PostResponse likeComment(UUID postId, UUID commentId, UUID authorId) {
     Post postToEdit = findPostOrThrow(postId);
@@ -197,11 +173,6 @@ public class PostService {
 
   /**
    * Unlikes a comment optimistically.
-   *
-   * @param postId The ID of the post containing the comment.
-   * @param commentId The ID of the comment to unlike.
-   * @param authorId The ID of the user unliking the comment.
-   * @return The post details with the optimistically decremented comment like count.
    */
   public PostResponse unlikeComment(UUID postId, UUID commentId, UUID authorId) {
     Post postToEdit = findPostOrThrow(postId);
@@ -232,10 +203,6 @@ public class PostService {
   private void handlePostChangeNotification(Post post, PostAction action, AuthorId actorId,
       CommentId commentId) {
     AuthorId recipientId = determineRecipient(post, action, commentId);
-
-    if (recipientId.equals(actorId)) {
-      return; // Skip notifying yourself
-    }
 
     eventPublisher.publish(new PostChangedEvent(
         post.getId(),

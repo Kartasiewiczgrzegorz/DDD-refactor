@@ -6,7 +6,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.grzegorzkartasiewicz.api.NotificationFacade;
 import com.grzegorzkartasiewicz.app.ConfirmResetPasswordRequest;
 import com.grzegorzkartasiewicz.app.RegisteredUser;
 import com.grzegorzkartasiewicz.app.ResetPasswordRequest;
@@ -21,8 +20,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-@Import(TestConfig.class)
 class UserControllerIT {
 
   @Autowired
@@ -41,9 +37,6 @@ class UserControllerIT {
 
   @Autowired
   private UserService userService;
-
-  @MockBean
-  private NotificationFacade notificationFacade;
 
   @Test
   @DisplayName("should register user and return 201 Created for valid data")

@@ -1,24 +1,31 @@
 package com.grzegorzkartasiewicz.domain;
 
 public enum NotificationType {
-  PASSWORD_RESET(true),
-  EMAIL_VERIFICATION(true),
-  COMMENT_LIKED(false),
-  POST_LIKED(false),
-  COMMENT_UNLIKED(false),
-  POST_UNLIKED(false),
-  COMMENT_EDITED(false),
-  POST_EDITED(false),
-  MESSAGE_RECEIVED(false),
-  FRIEND_REQUEST(false);
+  PASSWORD_RESET(true, Audience.DIRECT),
+  EMAIL_VERIFICATION(true, Audience.DIRECT),
+  COMMENT_LIKED(false, Audience.DIRECT),
+  POST_LIKED(false, Audience.DIRECT),
+  COMMENT_UNLIKED(false, Audience.DIRECT),
+  POST_UNLIKED(false, Audience.DIRECT),
+  COMMENT_EDITED(false, Audience.DIRECT),
+  POST_EDITED(false, Audience.DIRECT),
+  POST_CREATED(false, Audience.NETWORK),
+  MESSAGE_RECEIVED(false, Audience.DIRECT),
+  FRIEND_REQUEST(false, Audience.DIRECT);
 
   final boolean critical;
+  final Audience audience;
 
-  NotificationType(boolean critical) {
+  NotificationType(boolean critical, Audience audience) {
     this.critical = critical;
+    this.audience = audience;
   }
 
   boolean isCritical() {
     return this.critical;
+  }
+
+  public Audience getAudience() {
+    return this.audience;
   }
 }

@@ -2,6 +2,7 @@ package com.grzegorzkartasiewicz.adapters;
 
 import com.grzegorzkartasiewicz.app.NotificationSender;
 import com.grzegorzkartasiewicz.app.NotificationService;
+import com.grzegorzkartasiewicz.app.SocialGraphPort;
 import com.grzegorzkartasiewicz.domain.DomainEventPublisher;
 import com.grzegorzkartasiewicz.domain.NotificationRepository;
 import com.grzegorzkartasiewicz.domain.NotificationSettingsRepository;
@@ -16,12 +17,14 @@ class NotificationsConfiguration {
       NotificationRepository notificationRepository,
       NotificationSettingsRepository notificationSettingsRepository,
       NotificationSender notificationSender,
-      DomainEventPublisher domainEventPublisher) {
+      DomainEventPublisher domainEventPublisher,
+      SocialGraphPort socialGraphPort) {
     return new NotificationService(
         notificationRepository,
         notificationSettingsRepository,
         notificationSender,
-        domainEventPublisher
+        domainEventPublisher,
+        socialGraphPort
     );
   }
 }

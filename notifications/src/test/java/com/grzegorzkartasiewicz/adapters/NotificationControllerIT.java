@@ -41,7 +41,7 @@ class NotificationControllerIT {
   void shouldTriggerNotification() throws Exception {
     UUID userId = UUID.randomUUID();
     TriggerNotificationRequest request = new TriggerNotificationRequest(
-        userId, NotificationType.FRIEND_REQUEST, Channel.EMAIL, Map.of("key", "value")
+        userId, userId, NotificationType.FRIEND_REQUEST, Channel.EMAIL, Map.of("key", "value")
     );
 
     mockMvc.perform(post("/api/notifications/trigger")
