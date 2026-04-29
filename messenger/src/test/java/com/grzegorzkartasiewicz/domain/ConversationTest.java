@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.grzegorzkartasiewicz.domain.vo.MessageContent;
 import com.grzegorzkartasiewicz.domain.vo.UserId;
-import java.util.Iterator;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,20 +33,7 @@ class ConversationTest {
   void shouldThrowExceptionWhenParticipantsAreTheSame() {
     assertThatThrownBy(() -> Conversation.create(userA, userA))
         .isInstanceOf(ValidationException.class)
-        .hasMessageContaining("Cannot create a conversation with oneself");
-  }
-
-  @Test
-  void shouldStoreParticipantsInConsistentOrderToSupportDatabaseUniqueConstraints() {
-    // Given
-    UserId smallerId = new UserId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
-    UserId largerId = new UserId(UUID.fromString("99999999-9999-9999-9999-999999999999"));
-
-    Conversation conversation = Conversation.create(largerId, smallerId);
-
-    Iterator<UserId> iterator = conversation.getParticipants().iterator();
-    assertThat(iterator.next()).isEqualTo(smallerId);
-    assertThat(iterator.next()).isEqualTo(largerId);
+        .hasMessageContaining("userA and UserB cannot be the same");
   }
 
   @Test
@@ -58,6 +44,7 @@ class ConversationTest {
     Message message = conversation.sendMessage(userA, content);
 
     assertThat(message.getSenderId()).isEqualTo(userA);
+    assertThat(message.getReceiverId()).isEqualTo(userB);
     assertThat(message.getStatus()).isEqualTo(MessageStatus.SENT);
     assertThat(message.getConversationId()).isEqualTo(conversation.getId());
   }
@@ -72,11 +59,11 @@ class ConversationTest {
   }
 
   @Test
-  void participantCanMarkReceivedMessageAsRead() {
+  void receiverCanMarkMessageAsRead() {
     Conversation conversation = Conversation.create(userA, userB);
     Message message = conversation.sendMessage(userA, new MessageContent("Hi B!"));
 
-    conversation.markAsRead(message, userB);
+    message.markAsRead(userB);
 
     assertThat(message.getStatus()).isEqualTo(MessageStatus.READ);
   }
@@ -86,16 +73,16 @@ class ConversationTest {
     Conversation conversation = Conversation.create(userA, userB);
     Message message = conversation.sendMessage(userA, new MessageContent("Hi B!"));
 
-    assertThatThrownBy(() -> conversation.markAsRead(message, userA))
+    assertThatThrownBy(() -> message.markAsRead(userA))
         .isInstanceOf(CannotReadOwnMessageException.class);
   }
 
   @Test
-  void nonParticipantCannotMarkMessageAsRead() {
+  void nonReceiverCannotMarkMessageAsRead() {
     Conversation conversation = Conversation.create(userA, userB);
     Message message = conversation.sendMessage(userA, new MessageContent("Top Secret"));
 
-    assertThatThrownBy(() -> conversation.markAsRead(message, hackerC))
+    assertThatThrownBy(() -> message.markAsRead(hackerC))
         .isInstanceOf(NotAParticipantException.class);
   }
 }

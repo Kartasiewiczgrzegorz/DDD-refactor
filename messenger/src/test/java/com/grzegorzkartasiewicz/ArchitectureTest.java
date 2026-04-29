@@ -8,7 +8,7 @@ import com.tngtech.archunit.library.Architectures.LayeredArchitecture;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-@Disabled("Module is empty")
+@Disabled("Layers are empty")
 class ArchitectureTest {
 
   private final JavaClasses importedClasses = new ClassFileImporter()

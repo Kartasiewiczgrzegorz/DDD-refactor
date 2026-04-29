@@ -27,17 +27,19 @@ public class Conversation {
   }
 
 
-  public Message sendMessage(UserId userA, MessageContent content) {
-    if (!participants.contains(userA)) {
-      throw new NotAParticipantException("userA is not participant of this conversation");
+  public Message sendMessage(UserId sender, MessageContent content) {
+    if (!participants.contains(sender)) {
+      throw new NotAParticipantException("sender is not participant of this conversation");
     }
-    return Message.create(id, userA, content);
+    UserId receiver = participants.stream().filter(participant -> !participant.equals(sender))
+        .findFirst()
+        .orElseThrow(
+            () -> new NotAParticipantException("sender is not participant of this conversation"));
+
+    return Message.create(id, sender, receiver, content);
   }
 
-  public void markAsRead(Message message, UserId userB) {
-    if (!participants.contains(userB)) {
-      throw new NotAParticipantException("userB is not participant of this conversation");
-    }
-    message.markAsRead(userB);
+  public boolean isParticipant(UserId userId) {
+    return participants.contains(userId);
   }
 }
