@@ -33,10 +33,13 @@ public class MessengerService {
 
     Conversation conversation = findOrCreateConversationAndValidate(senderId, receiverId);
 
+    if (conversation.getId() == null) {
+      conversation = conversationRepository.save(conversation);
+    }
+
     Message message = conversation.sendMessage(senderId, new MessageContent(command.text()));
 
     conversationRepository.save(message);
-    conversationRepository.save(conversation);
 
     domainEventPublisher.publish(new MessageSent());
 

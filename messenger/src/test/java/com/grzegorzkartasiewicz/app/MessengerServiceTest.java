@@ -22,6 +22,7 @@ import com.grzegorzkartasiewicz.domain.vo.UserId;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -110,7 +111,8 @@ class MessengerServiceTest {
   void sendMessage_shouldUseExistingConversation() {
     UserId senderId = new UserId(UUID.randomUUID());
     UserId receiverId = new UserId(UUID.randomUUID());
-    Conversation existingConversation = Conversation.create(senderId, receiverId);
+    Conversation existingConversation = new Conversation(new ConversationId(UUID.randomUUID()),
+        Set.of(senderId, receiverId));
     SendMessageCommand command = new SendMessageCommand(senderId.id(), receiverId.id(),
         "How are you?");
 
