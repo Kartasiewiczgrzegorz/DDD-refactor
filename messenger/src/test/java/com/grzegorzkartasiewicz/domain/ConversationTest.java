@@ -33,7 +33,7 @@ class ConversationTest {
   void shouldThrowExceptionWhenParticipantsAreTheSame() {
     assertThatThrownBy(() -> Conversation.create(userA, userA))
         .isInstanceOf(ValidationException.class)
-        .hasMessageContaining("userA and UserB cannot be the same");
+        .hasMessageContaining(Conversation.PARTICIPANTS_CANNOT_BE_THE_SAME_MESSAGE);
   }
 
   @Test

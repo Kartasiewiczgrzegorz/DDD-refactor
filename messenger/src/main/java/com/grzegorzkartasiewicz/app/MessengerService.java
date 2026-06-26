@@ -22,17 +22,16 @@ public class MessengerService {
   private final SocialGraphPort socialGraphPort;
   private final DomainEventPublisher domainEventPublisher;
 
+  public static final String CONVERSATION_DONT_EXISTS_MESSAGE = "Conversation with given ID: %s does not exist";
+  public static final String MESSAGE_DONT_EXISTS_MESSAGE = "Message with given ID: %s does not exist";
+  public static final String NOT_FRIENDS_MESSAGE = "Users %s and %s are not friends";
+  public static final String NOT_PART_OF_CONVERSATION_MESSAGE = "User %s is not part of conversation %s";
+
   public MessageResponse sendMessage(SendMessageCommand command) {
     UserId senderId = new UserId(command.sender());
     UserId receiverId = new UserId(command.receiver());
-    Optional<Conversation> conversationOptional = conversationRepository.findByParticipants(
-        senderId, receiverId);
-    Conversation conversation = conversationOptional.orElse(
-        Conversation.create(senderId, receiverId));
 
-    if (conversationOptional.isEmpty() && !socialGraphPort.areFriends(senderId, receiverId)) {
-      throw new NotFriendsException("Not friends");
-    }
+    Conversation conversation = findOrCreateConversationAndValidate(senderId, receiverId);
 
     Message message = conversation.sendMessage(senderId, new MessageContent(command.text()));
 
@@ -46,8 +45,8 @@ public class MessengerService {
 
   public void markAsRead(MarkAsReadCommand command) {
     MessageId messageId = new MessageId(command.messageId());
-    Message message = conversationRepository.findMessageById(messageId)
-        .orElseThrow(() -> new MessageNotExistsException("Message not found"));
+    Message message = findMessageOrThrow(messageId);
+    
     UserId receiver = new UserId(command.receiver());
     message.markAsRead(receiver);
 
@@ -57,16 +56,56 @@ public class MessengerService {
   }
 
   public List<MessageResponse> getHistory(UUID conversationId, UUID participantId) {
-    conversationRepository.findById(
-        new ConversationId(conversationId)).map(conv -> {
-      if (!conv.isParticipant(new UserId(participantId))) {
-        throw new AccessDeniedException("Not part of conversation");
-      }
-      return conv;
-    }).orElseThrow(() -> new ConversationNotExistsException("Conversation not found"));
+    ConversationId convId = new ConversationId(conversationId);
+    Conversation conversation = findConversationOrThrow(convId);
+
+    validateParticipant(conversation, new UserId(participantId), convId);
+
     List<Message> messagesByConversationId = conversationRepository.findMessagesByConversationId(
-        new ConversationId(conversationId));
-    return messagesByConversationId.stream().map(
+        convId);
+    return mapMessagesToResponse(messagesByConversationId);
+  }
+
+  private Conversation findOrCreateConversationAndValidate(UserId senderId, UserId receiverId) {
+    Optional<Conversation> conversationOptional = conversationRepository.findByParticipants(
+        senderId, receiverId);
+
+    if (conversationOptional.isPresent()) {
+      return conversationOptional.get();
+    }
+
+    Conversation newConversation = Conversation.create(senderId, receiverId);
+
+    if (!socialGraphPort.areFriends(senderId, receiverId)) {
+      throw new NotFriendsException(
+          String.format(NOT_FRIENDS_MESSAGE, senderId.id(), receiverId.id()));
+    }
+
+    return newConversation;
+  }
+
+  private Message findMessageOrThrow(MessageId messageId) {
+    return conversationRepository.findMessageById(messageId)
+        .orElseThrow(() -> new MessageNotExistsException(
+            String.format(MESSAGE_DONT_EXISTS_MESSAGE, messageId.id())));
+  }
+
+  private Conversation findConversationOrThrow(ConversationId conversationId) {
+    return conversationRepository.findById(conversationId)
+        .orElseThrow(() -> new ConversationNotExistsException(
+            String.format(CONVERSATION_DONT_EXISTS_MESSAGE, conversationId.id())));
+  }
+
+  private void validateParticipant(Conversation conversation, UserId participantId,
+      ConversationId conversationId) {
+    if (!conversation.isParticipant(participantId)) {
+      throw new AccessDeniedException(
+          String.format(NOT_PART_OF_CONVERSATION_MESSAGE, participantId.id(), conversationId.id()));
+    }
+  }
+
+  private List<MessageResponse> mapMessagesToResponse(List<Message> messages) {
+    return messages.stream().map(
             message -> new MessageResponse(message.getSenderId().id(), message.getContent().value()))
         .toList();
   }

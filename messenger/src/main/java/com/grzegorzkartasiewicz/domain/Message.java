@@ -28,6 +28,9 @@ public class Message {
     this.content = content;
   }
 
+  public static final String CANNOT_READ_OWN_MESSAGE = "User %s cannot read their own message";
+  public static final String NOT_A_RECEIVER_MESSAGE = "User %s is not the receiver of this message";
+
   public static Message create(ConversationId conversationId, UserId sender, UserId receiver,
       MessageContent content) {
     return new Message(conversationId, sender, receiver, content);
@@ -37,12 +40,22 @@ public class Message {
     if (status == MessageStatus.READ) {
       return;
     }
-    if (senderId.equals(receiver)) {
-      throw new CannotReadOwnMessageException("Cannot read own message");
-    }
-    if (!receiverId.equals(receiver)) {
-      throw new NotAParticipantException("userB is not participant of this conversation");
-    }
+    validateNotSender(receiver);
+    validateReceiver(receiver);
+
     status = MessageStatus.READ;
+  }
+
+  private void validateNotSender(UserId receiver) {
+    if (senderId.equals(receiver)) {
+      throw new CannotReadOwnMessageException(
+          String.format(CANNOT_READ_OWN_MESSAGE, receiver.id()));
+    }
+  }
+
+  private void validateReceiver(UserId receiver) {
+    if (!receiverId.equals(receiver)) {
+      throw new NotAParticipantException(String.format(NOT_A_RECEIVER_MESSAGE, receiver.id()));
+    }
   }
 }
