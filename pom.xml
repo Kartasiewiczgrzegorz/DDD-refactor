@@ -2,12 +2,73 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<parent>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.5.6</version>
-		<relativePath/> <!-- lookup parent from repository -->
-	</parent>
+	<dependencyManagement>
+		<dependencies>
+			<!-- Internal Modules -->
+			<dependency>
+				<artifactId>bootstrap</artifactId>
+				<groupId>com.grzegorzkartasiewicz</groupId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<artifactId>identity-access-management</artifactId>
+				<groupId>com.grzegorzkartasiewicz</groupId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<artifactId>content-management</artifactId>
+				<groupId>com.grzegorzkartasiewicz</groupId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.grzegorzkartasiewicz</groupId>
+				<artifactId>social-graph</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.grzegorzkartasiewicz</groupId>
+				<artifactId>messenger</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.grzegorzkartasiewicz</groupId>
+				<artifactId>notifications</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<!-- External Dependencies -->
+			<dependency>
+				<artifactId>jjwt-api</artifactId>
+				<groupId>io.jsonwebtoken</groupId>
+				<version>${jjwt.version}</version>
+			</dependency>
+			<dependency>
+				<artifactId>jjwt-impl</artifactId>
+				<groupId>io.jsonwebtoken</groupId>
+				<version>${jjwt.version}</version>
+			</dependency>
+			<dependency>
+				<artifactId>jjwt-jackson</artifactId>
+				<groupId>io.jsonwebtoken</groupId>
+				<version>${jjwt.version}</version>
+			</dependency>
+			<dependency>
+				<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+				<groupId>org.springdoc</groupId>
+				<version>${springdoc.version}</version>
+			</dependency>
+			<dependency>
+				<artifactId>archunit-junit5</artifactId>
+				<groupId>com.tngtech.archunit</groupId>
+				<version>${archunit.version}</version>
+			</dependency>
+			<dependency>
+				<artifactId>greenmail-junit5</artifactId>
+				<groupId>com.icegreen</groupId>
+				<version>${greenmail.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<groupId>com.grzegorzkartasiewicz</groupId>
 	<artifactId>Facebook-Clone</artifactId>
@@ -16,9 +77,12 @@
 	<description>Facebook Clone in Spring</description>
 	<packaging>pom</packaging>
 
-	<properties>
-		<java.version>17</java.version>
-	</properties>
+	<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+		<version>4.1.0</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
 
 	<modules>
 		<module>bootstrap</module>
@@ -29,24 +93,13 @@
     <module>notifications</module>
 	</modules>
 
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>com.grzegorzkartasiewicz</groupId>
-				<artifactId>domain</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.grzegorzkartasiewicz</groupId>
-				<artifactId>app</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.grzegorzkartasiewicz</groupId>
-				<artifactId>adapters</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
+	<properties>
+		<archunit.version>1.3.0</archunit.version>
+		<greenmail.version>2.1.0</greenmail.version>
+		<java.version>21</java.version>
+		<jjwt.version>0.12.6</jjwt.version>
+		<springdoc.version>2.5.0</springdoc.version>
+		<testcontainers.version>1.21.4</testcontainers.version>
+	</properties>
 
 </project>

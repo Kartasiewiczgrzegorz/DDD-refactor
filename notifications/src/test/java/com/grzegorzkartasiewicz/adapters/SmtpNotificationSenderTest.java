@@ -21,7 +21,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest(classes = {
     SmtpNotificationSender.class,
-    org.springframework.boot.autoconfigure.mail.MailSenderAutoConfiguration.class
+    org.springframework.boot.mail.autoconfigure.MailSenderAutoConfiguration.class
 }, properties = {
     "spring.mail.host=localhost",
     "spring.mail.port=3025",

@@ -7,7 +7,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grzegorzkartasiewicz.app.SocialService;
 import com.grzegorzkartasiewicz.domain.SocialUser;
 import com.grzegorzkartasiewicz.domain.UserRepository;
@@ -20,12 +19,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -45,11 +45,24 @@ class SocialControllerIT {
   @Autowired
   private SocialService socialService;
 
+  @Autowired
+  private org.springframework.web.context.WebApplicationContext webApplicationContext;
+
   private UUID currentUserId;
   private UUID otherUserId;
 
   @BeforeEach
   void setUp() {
+    this.mockMvc = org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup(
+            webApplicationContext)
+        .apply(
+            org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity())
+        .defaultRequest(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/")
+            .with(
+                org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(
+                    "00000000-0000-0000-0000-000000000000")))
+        .build();
+
     currentUserId = UUID.fromString("00000000-0000-0000-0000-000000000000");
     otherUserId = UUID.randomUUID();
 

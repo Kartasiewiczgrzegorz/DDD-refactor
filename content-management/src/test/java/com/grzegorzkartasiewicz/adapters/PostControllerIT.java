@@ -7,7 +7,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grzegorzkartasiewicz.app.CommentCreationRequest;
 import com.grzegorzkartasiewicz.app.CommentDeleteRequest;
 import com.grzegorzkartasiewicz.app.CommentUpdateRequest;
@@ -20,11 +19,12 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
 @AutoConfigureMockMvc
 @Transactional
@@ -40,6 +40,22 @@ class PostControllerIT extends AbstractIT {
   @Autowired
   private PostService postService;
 
+  @Autowired
+  private org.springframework.web.context.WebApplicationContext webApplicationContext;
+
+  @org.junit.jupiter.api.BeforeEach
+  void setUp() {
+    this.mockMvc = org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup(
+            webApplicationContext)
+        .apply(
+            org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity())
+        .defaultRequest(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/")
+            .with(
+                org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user(
+                    "00000000-0000-0000-0000-000000000000")))
+        .build();
+  }
+
   @Test
   @DisplayName("should add post and return 201 Created")
   void shouldAddPost() throws Exception {
@@ -51,6 +67,7 @@ class PostControllerIT extends AbstractIT {
     mockMvc.perform(post("/posts")
             .contentType(MediaType.APPLICATION_JSON)
             .content(objectMapper.writeValueAsString(request)))
+        .andDo(org.springframework.test.web.servlet.result.MockMvcResultHandlers.print())
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.id").isNotEmpty())
         .andExpect(jsonPath("$.description").value("Test description"))
